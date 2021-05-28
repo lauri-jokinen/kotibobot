@@ -31,6 +31,7 @@ mac_to_name[koodit["työkkärin lämpömittari"]] = "työkkärin lämpömittari"
 mac_to_name[koodit["makkarin lämpömittari"]] = "makkarin lämpömittari"
 mac_to_name[koodit["olkkarin lämpömittari"]] = "olkkarin lämpömittari"
 
+# kokeillaan gittiä :)
 
 name_to_mac = json.loads("{}")
 for mac in mac_to_name:
