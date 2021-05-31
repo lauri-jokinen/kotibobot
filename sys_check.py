@@ -37,5 +37,5 @@ if not flag:
             flag = True
             break
 
-if not flag:
+if flag:
     send_email('Jotkin paristot ovat lopussa.')
