@@ -140,7 +140,7 @@ def mi_command(mac):
     s = ['/home/lowpaw/Downloads/mi_scripts/LYWSD03MMC.py', '--device', mac, '--count', '1']
     res = subprocess.run(s, stdout=subprocess.PIPE)
     res_str = res.stdout.decode('utf-8')
-  execpt:
+  except:
     res_str = "ERROR: Unknown reading error with a Mi device."
   return res_str
 
@@ -183,6 +183,11 @@ def remove_extra_spaces(str):
       i = i+1
   return " ".join(arr)
   
+# command : 'mac timer mon 22.5'
+def in_allday_timer_format(command):
+  arr = command.split(" ")
+  return (len(arr) == 4 and arr[1] == 'timer')
+
 """
 FUNCTIONS THAT ARE NO LONGER USED
 # command : 'mac timer mon 19:00-20:00 22.5'
@@ -193,11 +198,6 @@ def in_new_timer_format(command):
     times = arr[3].split("-")
     return len(times) == 2
   return False
-
-# command : 'mac timer mon 22.5'
-def in_allday_timer_format(command):
-  arr = command.split(" ")
-  return (len(arr) == 4 and arr[1] == 'timer')
 
 def str_to_time(str):
     if str == '24:00':
@@ -357,22 +357,22 @@ def plot_ts(selected_rooms):
   
   valves = []
   for room in selected_rooms:
-    for valve in eq3.eq3_in_rooms[room]:
+    for valve in eq3_in_rooms[room]:
       valves.append(valve + " valve")
   
   targets = []
   for room in selected_rooms:
-    for valve in eq3.eq3_in_rooms[room]:
+    for valve in eq3_in_rooms[room]:
       targets.append(valve + " target")
       
   temps = []
   for room in selected_rooms:
-    for sensor in eq3.mi_in_rooms[room]:
+    for sensor in mi_in_rooms[room]:
       temps.append(sensor + " temp")
       
   humidities = []
   for room in selected_rooms:
-    for sensor in eq3.mi_in_rooms[room]:
+    for sensor in mi_in_rooms[room]:
       humidities.append(sensor + " humidity")
   
   ax = data.plot(x="time",y=(valves+humidities))

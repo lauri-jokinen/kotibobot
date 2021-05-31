@@ -18,7 +18,7 @@ def collect_and_save():
   # gather data
   for room in selected_rooms:
     for valve in kotibobot.eq3_in_rooms[room]:
-      status = kotibobot.eq3_command(eq3.name_to_mac[valve] + ' sync')
+      status = kotibobot.eq3_command(kotibobot.name_to_mac[valve] + ' sync')
       #status = 'not this time'
       if "Valve:" in status and "Temperature:" in status:
         valve_reading = (status.split("Valve:")[1]).split("%")[0]
