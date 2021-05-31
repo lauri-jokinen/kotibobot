@@ -10,6 +10,7 @@ from matplotlib import pyplot
 import json
 import matplotlib.dates as mdates # helps to format dates in x-axis
 
+# THIS SCRIPT SHOULD NOT BE USED ANYMORE
 # in: olkkari-keittiö
 # 
 
