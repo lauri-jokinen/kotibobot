@@ -1,10 +1,8 @@
-import eq3_functions as eq3
+import kotibobot_functions as kotibobot
 from datetime import datetime
 import json
 import pandas as pd
 import time
-
-
 
 def collect_and_save():
   new_data = json.loads("{}")
@@ -14,13 +12,13 @@ def collect_and_save():
   file_name = '/home/lowpaw/Downloads/kotibobot/' + datetime.today().strftime("%Y-%m") + '.pkl'
   
   selected_rooms = []
-  for room in eq3.rooms:
+  for room in kotibobot.rooms:
     selected_rooms.append(room)
   
-  # gather eq3 data
+  # gather data
   for room in selected_rooms:
-    for valve in eq3.eq3_in_rooms[room]:
-      status = eq3.eq3_command(eq3.name_to_mac[valve] + ' sync')
+    for valve in kotibobot.eq3_in_rooms[room]:
+      status = kotibobot.eq3_command(eq3.name_to_mac[valve] + ' sync')
       #status = 'not this time'
       if "Valve:" in status and "Temperature:" in status:
         valve_reading = (status.split("Valve:")[1]).split("%")[0]
@@ -35,8 +33,9 @@ def collect_and_save():
       new_data[valve + " target"] = target_reading
       new_data[valve + " valve"] = json.loads("{}")
       new_data[valve + " valve"] = valve_reading
-    for sensor in eq3.mi_in_rooms[room]:
-      mi_reading = eq3.mi_to_json(eq3.name_to_mac[sensor])
+      
+    for sensor in kotibobot.mi_in_rooms[room]:
+      mi_reading = kotibobot.mi_to_json(kotibobot.name_to_mac[sensor])
       if 'temp' in mi_reading and 'humidity' in mi_reading:
         temp_reading = mi_reading['temp']
         humidity_reading = mi_reading['humidity']
