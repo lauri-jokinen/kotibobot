@@ -1,7 +1,6 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import json
-import eq3_functions as eq3
-import ts_script
+import kotibobot_functions as kotibobot
 from datetime import datetime
 
 def get_chat_id(update, context):
@@ -44,7 +43,7 @@ def direct_eq3_command(update, context):
   str = update.message.text
   # Remove /-command
   str = " ".join(str.split(" ")[1:])
-  res_array = eq3.human_to_machine(str)
+  res_array = kotibobot.human_to_machine(str)
   for res in res_array:
     if len(res) > 2500:
       update.message.reply_text(res[0:2500])
@@ -56,7 +55,7 @@ def time_series(update,context):
   # Remove /-command
   str = " ".join(str.split(" ")[1:])
   selected_rooms = str.split(" ")[0].split("-")
-  ts_script.plot_ts(selected_rooms)
+  kotibobot.plot_ts(selected_rooms)
   #chat_id = update.message.chat.id
   context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
   
@@ -64,7 +63,7 @@ def mi_status(update,context):
   str = update.message.text
   # Remove /-command
   str = " ".join(str.split(" ")[1:])
-  res_array = eq3.read_mi(str)
+  res_array = kotibobot.read_mi(str)
   if len(res_array) > 20:
     res_array = res_array[0:18]
   for res in res_array:
