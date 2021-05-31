@@ -7,7 +7,7 @@ def send_email(str):
     smtp_server = "smtpa.kolumbus.fi"
     sender_email = "lauri.jokinen@kotikone.fi"  # Enter your address
     receiver_email = "lauri.jokinen@iki.fi"  # Enter receiver address
-    password = "lapamato"
+    password = koodit["kotikone_salasana"]
     message = """\
 Subject: Kotibobot
 
