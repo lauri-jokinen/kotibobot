@@ -30,10 +30,10 @@ def remove_spaces_from_front(text):
 def authorize(update, context):
   id = update.message.id
   if id in koodit["lowpaw-teleIDt"]:
-    res = "olet inessä"
+    update.message.reply("olet inessä")
   else:
-    res = "et ole inessä"
-  update.message.reply(res)
+    update.message.reply("et ole inessä")
+  
 
 def start(update, context):
   text = "Hieno botti hermanni" + "\nhttps://github.com/Heckie75/eQ-3-radiator-thermostat"
@@ -43,7 +43,7 @@ def direct_eq3_command(update, context):
   str = update.message.text
   # Remove /-command
   str = " ".join(str.split(" ")[1:])
-  res_array = kotibobot.human_to_machine(str)
+  res_array = kotibobot.eq3_command_human(str)
   for res in res_array:
     if len(res) > 2500:
       update.message.reply_text(res[0:2500])
@@ -63,7 +63,7 @@ def mi_status(update,context):
   str = update.message.text
   # Remove /-command
   str = " ".join(str.split(" ")[1:])
-  res_array = kotibobot.read_mi(str)
+  res_array = kotibobot.mi_read_human(str)
   if len(res_array) > 20:
     res_array = res_array[0:18]
   for res in res_array:
