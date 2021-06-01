@@ -31,8 +31,7 @@ flag = False
 
 for mi in kotibobot.mis:
   res = kotibobot.mi_to_json(mi)
-  if res['battery'] < 10:
-    print('Mi vailla virtaa :DD')
+  if 'battery' in res and res['battery'] < 10:
     flag = True
     break
 
@@ -43,7 +42,9 @@ if not flag:
       flag = True
       break
 
-
 if flag:
   print('Yritän lähettää postia...')
   send_email('Jotkin paristot ovat lopussa.')
+else:
+  print('Yritän lähettää postia...')
+  send_email('Kaikki on hyvin.')

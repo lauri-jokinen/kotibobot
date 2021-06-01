@@ -17,35 +17,17 @@ def collect_and_save():
   
   # gather data
   for room in selected_rooms:
-    for valve in kotibobot.eq3_in_rooms[room]:
-      status = kotibobot.eq3_command(kotibobot.name_to_mac[valve] + ' sync')
-      #status = 'not this time'
-      if "Valve:" in status and "Temperature:" in status:
-        valve_reading = (status.split("Valve:")[1]).split("%")[0]
-        valve_reading = float(valve_reading.split(" ")[-1])
-        target_reading = (status.split("Temperature:")[1]).split("°C")[0]
-        target_reading = float(target_reading.split(" ")[-1])
-      else:
-        valve_reading = float("nan")
-        target_reading = float("nan")
-      
-      new_data[valve + " target"] = json.loads("{}")
-      new_data[valve + " target"] = target_reading
-      new_data[valve + " valve"] = json.loads("{}")
-      new_data[valve + " valve"] = valve_reading
+    for eq3 in kotibobot.eq3_in_rooms[room]:
+      eq3_reading = kotibobot.eq3_to_json(kotibobot.name_to_mac[eq3])
+      #new_data[valve + " target"] = json.loads("{}")
+      new_data[eq3 + " target"] = eq3_reading['target']
+      new_data[eq3 + " valve"]  = eq3_reading['valve']
+      new_data[eq3 + " offset"] = eq3_reading['offset']
       
     for sensor in kotibobot.mi_in_rooms[room]:
       mi_reading = kotibobot.mi_to_json(kotibobot.name_to_mac[sensor])
-      if 'temp' in mi_reading and 'humidity' in mi_reading:
-        temp_reading = mi_reading['temp']
-        humidity_reading = mi_reading['humidity']
-      else:
-        temp_reading = float("nan")
-        humidity_reading = float("nan")
-      new_data[sensor + " temp"] = json.loads("{}")
-      new_data[sensor + " temp"] = temp_reading
-      new_data[sensor + " humidity"] = json.loads("{}")
-      new_data[sensor + " humidity"] = humidity_reading
+      new_data[sensor + " temp"]     = mi_reading['temp']
+      new_data[sensor + " humidity"] = mi_reading['humidity']
   
   new_df = pd.json_normalize(new_data)
   

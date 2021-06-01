@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot
 import matplotlib.dates as mdates # helps to format dates in x-axis
+import math
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
@@ -63,7 +64,7 @@ for room in rooms:
       mis.append(mi)
 
 # eq3s in rooms
-# {"room1" : ["mac1"], ...}
+# {"room1" : ["name1"], ...}
 eq3_in_rooms = json.loads("{}")
 for room in rooms:
   eq3_in_rooms[room] = []
@@ -72,7 +73,7 @@ for room in rooms:
       eq3_in_rooms[room].append(mac_to_name[eq3])
 
 # mi in rooms
-# {"room1" : ["mac1"], ...}
+# {"room1" : ["name1"], ...}
 mi_in_rooms = json.loads("{}")
 for room in rooms:
   mi_in_rooms[room] = []
@@ -134,6 +135,25 @@ def eq3_command_human(str):
       else:
         res.append("Huonetta '" + room + "' ei ole. Valitse jokin näistä: " + ", ".join(rooms) + ". Käyn muut huoneet läpi.")
   return res
+
+def eq3_to_json(mac):
+  res = eq3_command(mac + ' sync')
+  res_json = json.loads("{}")
+  try:
+    target_reading = (res.split("Temperature:")[1]).split("°C")[0]
+    target_reading = float(target_reading.split(" ")[-1])
+    res_json['target'] = target_reading
+    valve_reading = (res.split("Valve:")[1]).split("%")[0]
+    valve_reading = float(valve_reading.split(" ")[-1])
+    res_json['valve'] = valve_reading
+    offset_reading = (res.split("Offset temperature:")[1]).split("°C")[0]
+    offset_reading = float(offset_reading.split(" ")[-1])
+    res_json['offset'] = offset_reading
+  except:
+    res_json['target'] = float('nan')
+    res_json['valve'] = float('nan')
+    res_json['offset'] = float('nan')
+  return res_json
 
 def mi_command(mac):
   try:
@@ -336,14 +356,12 @@ def timers_equal(one, other):
 """
 # TIME SERIES PLOTTING
 
-def plot_ts(selected_rooms):
-  t_start = datetime.now() - timedelta(hours = 48)
-  t_end = datetime.now()
+def load_ts_data():
   file_name = '/home/lowpaw/Downloads/kotibobot/' + datetime.today().strftime("%Y-%m") + '.pkl'
-  try:
-    data = pd.read_pickle(file_name)
-  except:
-    print("Tiedostoa ei löydy!")
+  return pd.read_pickle(file_name)
+
+def plot_temp_48(selected_rooms):
+  data = load_ts_data()
   #data = pd.DataFrame(series)
   #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
   
@@ -352,40 +370,213 @@ def plot_ts(selected_rooms):
   #data = data[data['time'] > pd.to_datetime(t_start, format="%Y-%m-%dT%H:%M")]
   #data = data[data['time'] < pd.to_datetime(t_end, format="%Y-%m-%dT%H:%M")]
   
+  t_start = datetime.now() - timedelta(hours = 48)
+  t_end = datetime.now()
+  
   data = data[data['time'] > t_start]
   data = data[data['time'] < t_end]
   
   valves = []
   for room in selected_rooms:
-    for valve in eq3_in_rooms[room]:
-      valves.append(valve + " valve")
+    for eq3 in eq3_in_rooms[room]:
+      valves.append(eq3 + " valve")
   
   targets = []
   for room in selected_rooms:
-    for valve in eq3_in_rooms[room]:
-      targets.append(valve + " target")
+    for eq3 in eq3_in_rooms[room]:
+      targets.append(eq3 + " target")
       
   temps = []
   for room in selected_rooms:
     for sensor in mi_in_rooms[room]:
       temps.append(sensor + " temp")
+  
+  ax = data.plot(x="time",y=(temps), alpha=0.7, color='r')
+  ax = data.plot(x="time",y=(targets), alpha=0.7,linestyle='dashed', ax=ax)
+  pyplot.ylabel('°C   ',rotation=0)
+  
+  lim = list(pyplot.ylim())
+  lim[0] = math.floor(lim[0])
+  lim[1] = math.ceil(lim[1])
+  
+  data.plot(x="time",y=(valves),secondary_y=True,linestyle=':', ax=ax, alpha=0.7) # ax=ax laittaa samaan kuvaan
+  pyplot.ylim([-2, 102])
+  ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
+  
+  ax.yaxis.grid(True, which='major', alpha = 0.2)
+  ax.yaxis.grid(True, which='minor')
+  ax.xaxis.grid(True, alpha=0.2)
+  pyplot.ylabel('%',rotation=0)
+  ax.set_xlabel('')
+  
+  myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
+  ax.xaxis.set_major_formatter(myFmt)
+  
+  #pyplot.show()
+  pyplot.savefig('time_series.png')
+
+def plot_temp_offset(selected_rooms):
+  data = load_ts_data()
+  #data = pd.DataFrame(series)
+  #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
+  
+  #t_start = "2021-05-08T16:15"
+  #t_end   = "2021-05-10T17:10"
+  #data = data[data['time'] > pd.to_datetime(t_start, format="%Y-%m-%dT%H:%M")]
+  #data = data[data['time'] < pd.to_datetime(t_end, format="%Y-%m-%dT%H:%M")]
+  
+  t_start = datetime.now() - timedelta(hours = 48)
+  t_end = datetime.now()
+  
+  data = data[data['time'] > t_start]
+  data = data[data['time'] < t_end]
+  
+  valves = []
+  for room in selected_rooms:
+    for eq3 in eq3_in_rooms[room]:
+      valves.append(eq3 + " valve")
       
+  offsets = []
+  for room in selected_rooms:
+    for eq3 in eq3_in_rooms[room]:
+      offsets.append(eq3 + " offset")
+  
+  targets = []
+  for room in selected_rooms:
+    for eq3 in eq3_in_rooms[room]:
+      targets.append(eq3 + " target")
+      
+  temps = []
+  for room in selected_rooms:
+    for sensor in mi_in_rooms[room]:
+      temps.append(sensor + " temp")
+  
+  data['temp'] =   data[temps].mean(axis = 1,skipna = True)
+  data['target'] = data[targets].mean(axis = 1,skipna = True)
+  data['error'] = data['temp'].subtract(data['target'])
+  #offsets.append('error')
+  
+  ax = data.plot(x="time",y='error', alpha=0.7, color = 'm')
+  data.plot(x="time",y=offsets, linestyle='dashed', alpha=0.7, ax=ax)
+  pyplot.ylabel('°C   ',rotation=0)
+  
+  lim = list(pyplot.ylim())
+  lim[0] = math.floor(lim[0])
+  lim[1] = math.ceil(lim[1])
+  
+  data.plot(x="time",y=valves, secondary_y=True,ax=ax,linestyle=':', alpha=0.7) # ax=ax laittaa samaan kuvaan
+  pyplot.ylabel('%',rotation=0)
+  ax.set_xlabel('')
+  pyplot.ylim([-2, 102])
+  ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
+  ax.set_yticks([0.0001], minor=True)
+  
+  ax.yaxis.grid(True, which='major', alpha = 0.2)
+  ax.yaxis.grid(True, which='minor')
+  ax.xaxis.grid(True, alpha=0.2)
+  
+  myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
+  ax.xaxis.set_major_formatter(myFmt)
+  
+  #pyplot.show()
+  pyplot.savefig('time_series.png')
+
+
+def plot_temp_days(selected_rooms):
+  data = load_ts_data()
+  #data = pd.DataFrame(series)
+  #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
+  
+  #t_start = "2021-05-08T16:15"
+  #t_end   = "2021-05-10T17:10"
+  #data = data[data['time'] > pd.to_datetime(t_start, format="%Y-%m-%dT%H:%M")]
+  #data = data[data['time'] < pd.to_datetime(t_end, format="%Y-%m-%dT%H:%M")]
+  
+  t2 = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+  t3 = t2 + timedelta(hours = 24)
+  t1 = t2 - timedelta(hours = 24)
+  t0 = t2 - timedelta(hours = 48)
+  
+  data0 = data[data['time'] > t0]
+  data0 = data[data['time'] < t1]
+  data0['time'] = data0['time'] + timedelta(hours = 48)
+  
+  data1 = data[data['time'] > t1]
+  data1 = data[data['time'] < t2]
+  data1['time'] = data1['time'] + timedelta(hours = 24)
+  
+  data2 = data[data['time'] > t2]
+  data2 = data[data['time'] < t3]
+      
+  temps = []
+  for room in selected_rooms:
+    for sensor in mi_in_rooms[room]:
+      temps.append(sensor + " temp")
+  temp = temps[0] # mean could be calculated, if many sensors
+  
+  ax = data2.plot(x="time",y=temp,color='r', alpha=0.7)
+  data1.plot(x="time",y=temp,linestyle='dashed',ax=ax,color='r', alpha=0.7) # ax=ax laittaa samaan kuvaan
+  data0.plot(x="time",y=temp,linestyle=':',ax=ax,color='r', alpha=0.7) # ax=ax laittaa samaan kuvaan
+  pyplot.ylabel('°C   ',rotation=0)
+  ax.set_xlabel('')
+  
+  lim = list(pyplot.ylim())
+  lim[0] = math.floor(lim[0])
+  lim[1] = math.ceil(lim[1])
+  ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
+  ax.yaxis.grid(True, which='major', alpha = 0.2)
+  ax.xaxis.grid(True, alpha=0.2)
+  
+  myFmt = mdates.DateFormatter('%-H:%M')
+  ax.xaxis.set_major_formatter(myFmt)
+  
+  #pyplot.show()
+  pyplot.savefig('time_series.png')
+  
+def plot_humidity_days(selected_rooms):
+  data = load_ts_data()
+  #data = pd.DataFrame(series)
+  #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
+  
+  #t_start = "2021-05-08T16:15"
+  #t_end   = "2021-05-10T17:10"
+  #data = data[data['time'] > pd.to_datetime(t_start, format="%Y-%m-%dT%H:%M")]
+  #data = data[data['time'] < pd.to_datetime(t_end, format="%Y-%m-%dT%H:%M")]
+  
+  t2 = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+  t3 = t2 + timedelta(hours = 24)
+  t1 = t2 - timedelta(hours = 24)
+  t0 = t2 - timedelta(hours = 48)
+  
+  data0 = data[data['time'] > t0]
+  data0 = data[data['time'] < t1]
+  data0['time'] = data0['time'] + timedelta(hours = 48)
+  
+  data1 = data[data['time'] > t1]
+  data1 = data[data['time'] < t2]
+  data1['time'] = data1['time'] + timedelta(hours = 24)
+  
+  data2 = data[data['time'] > t2]
+  data2 = data[data['time'] < t3]
+  
   humidities = []
   for room in selected_rooms:
     for sensor in mi_in_rooms[room]:
       humidities.append(sensor + " humidity")
+  humidity = humidities[0] # mean could be calculated, if many sensors
   
-  ax = data.plot(x="time",y=(valves+humidities))
+  ax = data2.plot(x="time",y=humidity,color='b',marker='.',markersize=3, alpha=0.7)
   pyplot.ylim([-2, 102])
-  pyplot.ylabel('%',rotation=0)
+  pyplot.ylabel('% ',rotation=0)
   
-  data.plot(x="time",y=(targets+temps),secondary_y=True,linestyle='dashed',ax=ax) # ax=ax laittaa samaan kuvaan
-  pyplot.ylabel('  °C',rotation=0)
+  data1.plot(x="time",y=humidity,linestyle='dashed',ax=ax,color='b',marker='.',markersize=3, alpha=0.7) # ax=ax laittaa samaan kuvaan
+  data0.plot(x="time",y=humidity,linestyle=':',ax=ax,color='b',marker='.',markersize=3, alpha=0.7) # ax=ax laittaa samaan kuvaan
   ax.set_xlabel('')
   
-  
-  myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
+  myFmt = mdates.DateFormatter('%-H:%M')
   ax.xaxis.set_major_formatter(myFmt)
+  ax.xaxis.grid(True, alpha=0.2)
+  ax.yaxis.grid(True, alpha=0.2)
   
   #pyplot.show()
   pyplot.savefig('time_series.png')
