@@ -565,12 +565,12 @@ def plot_humidity_days(selected_rooms):
       humidities.append(sensor + " humidity")
   humidity = humidities[0] # mean could be calculated, if many sensors
   
-  ax = data2.plot(x="time",y=humidity,color='b',marker='.',markersize=3, alpha=0.7)
+  ax = data2.plot(x="time",y=humidity,color='b',alpha=0.7)
   pyplot.ylim([-2, 102])
   pyplot.ylabel('% ',rotation=0)
   
-  data1.plot(x="time",y=humidity,linestyle='dashed',ax=ax,color='b',marker='.',markersize=3, alpha=0.7) # ax=ax laittaa samaan kuvaan
-  data0.plot(x="time",y=humidity,linestyle=':',ax=ax,color='b',marker='.',markersize=3, alpha=0.7) # ax=ax laittaa samaan kuvaan
+  data1.plot(x="time",y=humidity,linestyle='dashed',ax=ax,color='b',alpha=0.7) # ax=ax laittaa samaan kuvaan
+  data0.plot(x="time",y=humidity,linestyle=':',ax=ax,color='b',alpha=0.7) # ax=ax laittaa samaan kuvaan
   ax.set_xlabel('')
   
   myFmt = mdates.DateFormatter('%-H:%M')

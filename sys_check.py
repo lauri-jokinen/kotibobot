@@ -3,19 +3,19 @@ import kotibobot_functions as kotibobot
 import json
 import time
 
-with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
+with open(”/home/lowpaw/Downloads/telegram-koodeja.json”) as json_file:
   koodit = json.load(json_file)
 
 def send_email(str):
   port = 587  # For SSL
-  smtp_server = "smtpa.kolumbus.fi"
-  sender_email = "lauri.jokinen@kotikone.fi"  # Enter your address
-  receiver_email = "lauri.jokinen@iki.fi"  # Enter receiver address
-  password = koodit["kotikone_salasana"]
-  message = """\
+  smtp_server = ”smtpa.kolumbus.fi”
+  sender_email = ”lauri.jokinen@kotikone.fi”  # Enter your address
+  receiver_email = ”lauri.jokinen@iki.fi”  # Enter receiver address
+  password = koodit[”kotikone_salasana”]
+  message = ”””\
 Subject: Kotibobot
 
-"""
+”””
   message = message + str
   
   context = ssl.create_default_context()
@@ -26,25 +26,26 @@ Subject: Kotibobot
     server.login(sender_email, password)
     server.sendmail(sender_email, receiver_email, message)
 
+print('Sähköpostin lähetys-skripti')
 time.sleep(55) # 50 normisti
 flag = False
 
 for mi in kotibobot.mis:
   res = kotibobot.mi_to_json(mi)
-  if 'battery' in res and res['battery'] < 10:
+  if ’battery’ in res and res[’battery’] < 99:
     flag = True
     break
 
 if not flag:
   for eq3 in kotibobot.eq3s:
-    res = kotibobot.eq3_command(eq3 + ' sync')
-    if "batt" in res:
+    res = kotibobot.eq3_command(eq3 + ’ sync’)
+    if ”batt” in res:
       flag = True
       break
 
 if flag:
-  print('Yritän lähettää postia...')
-  send_email('Jotkin paristot ovat lopussa.')
+  print(’Yritän lähettää postia...’)
+  send_email(’Jotkin paristot ovat lopussa.’)
 else:
-  print('Yritän lähettää postia...')
-  send_email('Kaikki on hyvin.')
+  print(’Yritän lähettää postia...’)
+  send_email(’Kaikki on hyvin.’)
