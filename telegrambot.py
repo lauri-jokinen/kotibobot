@@ -149,7 +149,7 @@ def main():
   # Create Updater object and attach dispatcher to it
   updater = Updater(koodit["kotibobot"])
   dispatcher = updater.dispatcher
-  print("Bot started")
+  print("Kotibobot started")
 
   # Add command handler to dispatcher
   start_handler = CommandHandler('start', start)
