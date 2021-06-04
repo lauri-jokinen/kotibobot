@@ -11,6 +11,7 @@ import pandas as pd
 from matplotlib import pyplot
 import matplotlib.dates as mdates # helps to format dates in x-axis
 import math
+import multiprocessing # timeout function for Mi-command
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
@@ -155,14 +156,40 @@ def eq3_to_json(mac):
     res_json['offset'] = float('nan')
   return res_json
 
-def mi_command(mac):
+def mi_command_2(mac,return_dict):
   try:
     s = ['/home/lowpaw/Downloads/mi_scripts/LYWSD03MMC.py', '--device', mac, '--count', '1']
     res = subprocess.run(s, stdout=subprocess.PIPE)
     res_str = res.stdout.decode('utf-8')
   except:
-    res_str = "ERROR: Unknown reading error with a Mi device."
-  return res_str
+    res_str = "ERROR: Unknown error with a Mi device."
+  #return res_str
+  return_dict['res'] = res_str
+
+def mi_command(mac):
+  # Create a shared dictionary for results
+  manager = multiprocessing.Manager()
+  return_dict = manager.dict()
+  
+  # Start process
+  p = multiprocessing.Process(target=mi_command_2, args=(mac,return_dict))
+  p.start()
+  
+  # Check every 0.1 seconds if the process is done
+  for i in range(290):
+    if not p.is_alive():
+      print('Odotus palkittiin ' +str(i/10) +' sekunnin jälkeen.')
+      break
+    time.sleep(0.1)
+  
+  # Kill if the process is still running after the wait
+  if p.is_alive():
+    print("Mi command is still running, let's kill it!")
+    return_dict['res'] = "ERROR: Mi device timeout."
+    p.terminate()
+    
+  # Return results
+  return return_dict['res']
 
 def mi_to_json(mac):
   res = mi_command(mac)
@@ -498,15 +525,15 @@ def plot_temp_days(selected_rooms):
   t0 = t2 - timedelta(hours = 48)
   
   data0 = data[data['time'] > t0]
-  data0 = data[data['time'] < t1]
+  data0 = data0[data0['time'] < t1]
   data0['time'] = data0['time'] + timedelta(hours = 48)
   
   data1 = data[data['time'] > t1]
-  data1 = data[data['time'] < t2]
+  data1 = data1[data1['time'] < t2]
   data1['time'] = data1['time'] + timedelta(hours = 24)
   
   data2 = data[data['time'] > t2]
-  data2 = data[data['time'] < t3]
+  data2 = data2[data2['time'] < t3]
       
   temps = []
   for room in selected_rooms:
@@ -549,15 +576,15 @@ def plot_humidity_days(selected_rooms):
   t0 = t2 - timedelta(hours = 48)
   
   data0 = data[data['time'] > t0]
-  data0 = data[data['time'] < t1]
+  data0 = data0[data0['time'] < t1]
   data0['time'] = data0['time'] + timedelta(hours = 48)
   
   data1 = data[data['time'] > t1]
-  data1 = data[data['time'] < t2]
+  data1 = data1[data1['time'] < t2]
   data1['time'] = data1['time'] + timedelta(hours = 24)
   
   data2 = data[data['time'] > t2]
-  data2 = data[data['time'] < t3]
+  data2 = data2[data2['time'] < t3]
   
   humidities = []
   for room in selected_rooms:

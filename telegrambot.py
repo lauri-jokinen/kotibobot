@@ -27,18 +27,17 @@ def remove_spaces_from_front(text):
       return text
   return text
   
-def authorize(update, context):
-  id = update.message.id
-  if id in koodit["lowpaw-teleIDt"]:
-    update.message.reply("olet inessä")
-  else:
-    update.message.reply("et ole inessä")
+def authorized(update, context):
+  return update.message.from_user.id in koodit["lowpaw_teleID"]
 
 def start(update, context):
   text = "Hieno botti hermanni"
   return update.message.reply_text(text)
 
 def direct_eq3_command(update, context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   str = update.message.text
   # Remove /-command
   str = " ".join(str.split(" ")[1:])
@@ -50,6 +49,9 @@ def direct_eq3_command(update, context):
       update.message.reply_text(res)
 
 def makkaricommand(update,context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   str = update.message.text
   # Remove /-command
   str = " ".join(str.split(" ")[1:])
@@ -65,6 +67,9 @@ def makkaricommand(update,context):
       update.message.reply_text(res)
       
 def tyokkaricommand(update,context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   str = update.message.text
   # Remove /-command
   str = " ".join(str.split(" ")[1:])
@@ -80,6 +85,9 @@ def tyokkaricommand(update,context):
       update.message.reply_text(res)
       
 def olkkaricommand(update,context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   str = update.message.text
   # Remove /-command
   str = " ".join(str.split(" ")[1:])
@@ -95,6 +103,9 @@ def olkkaricommand(update,context):
       update.message.reply_text(res)
 
 def plot_makkari(update,context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   #str = update.message.text
   # Remove /-command
   #str = " ".join(str.split(" ")[1:])
@@ -110,6 +121,9 @@ def plot_makkari(update,context):
   context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
   
 def plot_olkkari(update,context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   selected_rooms = ['olkkari']
   kotibobot.plot_temp_48(selected_rooms)
   context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
@@ -121,6 +135,9 @@ def plot_olkkari(update,context):
   context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
   
 def plot_tyokkari(update,context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   selected_rooms = ['työkkäri']
   kotibobot.plot_temp_48(selected_rooms)
   context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
@@ -132,6 +149,9 @@ def plot_tyokkari(update,context):
   context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
 
 def mi_status(update,context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   str = update.message.text
   # Remove /-command
   str = " ".join(str.split(" ")[1:])
@@ -154,7 +174,6 @@ def main():
   # Add command handler to dispatcher
   start_handler = CommandHandler('start', start)
   eq3_handler = CommandHandler('eq3', direct_eq3_command)
-  auth_handler = CommandHandler('authorize', authorize)
   mi_handler = CommandHandler('temp', mi_status)
   plot_olkkari_handler = CommandHandler('kuvaolkkari', plot_olkkari)
   plot_tyokkari_handler = CommandHandler('kuvatyokkari', plot_tyokkari)
@@ -165,7 +184,6 @@ def main():
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
-  dispatcher.add_handler(auth_handler)
   dispatcher.add_handler(mi_handler)
   dispatcher.add_handler(plot_olkkari_handler)
   dispatcher.add_handler(plot_makkari_handler)
