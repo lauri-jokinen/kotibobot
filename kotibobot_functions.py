@@ -156,17 +156,19 @@ def eq3_to_json(mac):
     res_json['offset'] = float('nan')
   return res_json
 
-def mi_command_2(mac,return_dict):
+#def mi_command_2(mac,return_dict):
+def mi_command(mac):
   try:
-    s = ['/home/lowpaw/Downloads/mi_scripts/LYWSD03MMC.py', '--device', mac, '--count', '1']
-    res = subprocess.run(s, stdout=subprocess.PIPE)
+    s = ['/home/lowpaw/Downloads/mi_scripts/LYWSD03MMC.py', '--device', mac, '--count', '1', '--unreachable-count', '3']
+    res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 32)
     res_str = res.stdout.decode('utf-8')
   except:
     res_str = "ERROR: Unknown error with a Mi device."
-  #return res_str
-  return_dict['res'] = res_str
-
-def mi_command(mac):
+  return res_str
+  #return_dict['res'] = res_str
+'''
+def mi_command_3(mac):
+  q = multiprocessing.Queue()
   # Create a shared dictionary for results
   manager = multiprocessing.Manager()
   return_dict = manager.dict()
@@ -176,7 +178,7 @@ def mi_command(mac):
   p.start()
   
   # Check every 0.1 seconds if the process is done
-  for i in range(290):
+  for i in range(250): #290
     if not p.is_alive():
       print('Odotus palkittiin ' +str(i/10) +' sekunnin jälkeen.')
       break
@@ -187,10 +189,19 @@ def mi_command(mac):
     print("Mi command is still running, let's kill it!")
     return_dict['res'] = "ERROR: Mi device timeout."
     p.terminate()
+    time.sleep(0.1)
+    p.join(timeout=2.0)
+    q.close()
     
   # Return results
   return return_dict['res']
 
+def mi_command_extra(mac):
+  res = mi_command_1(mac)
+  if "ERROR" in res:
+    return mi_command_1(mac)
+  return res
+'''
 def mi_to_json(mac):
   res = mi_command(mac)
   mi_json = json.loads("{}")

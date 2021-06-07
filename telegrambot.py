@@ -3,6 +3,12 @@ import json
 import kotibobot_functions as kotibobot
 from datetime import datetime
 
+def showifemptystring(s):
+  if s == '':
+    return 'Empty output'
+  else:
+    return s
+
 def get_chat_id(update, context):
   chat_id = -1
 
@@ -43,6 +49,7 @@ def direct_eq3_command(update, context):
   str = " ".join(str.split(" ")[1:])
   res_array = kotibobot.eq3_command_human(str)
   for res in res_array:
+    res = showifemptystring(res)
     if len(res) > 2500:
       update.message.reply_text(res[0:2500])
     else:
@@ -61,6 +68,7 @@ def makkaricommand(update,context):
   else:
     res_array = kotibobot.eq3_command_human('makkari ' + str)
   for res in res_array:
+    res = showifemptystring(res)
     if len(res) > 2500:
       update.message.reply_text(res[0:2500])
     else:
@@ -79,6 +87,7 @@ def tyokkaricommand(update,context):
   else:
     res_array = kotibobot.eq3_command_human('työkkäri ' + str)
   for res in res_array:
+    res = showifemptystring(res)
     if len(res) > 2500:
       update.message.reply_text(res[0:2500])
     else:
@@ -97,6 +106,7 @@ def olkkaricommand(update,context):
   else:
     res_array = kotibobot.eq3_command_human('olkkari ' + str)
   for res in res_array:
+    res = showifemptystring(res)
     if len(res) > 2500:
       update.message.reply_text(res[0:2500])
     else:
@@ -159,6 +169,7 @@ def mi_status(update,context):
   if len(res_array) > 20:
     res_array = res_array[0:18]
   for res in res_array:
+    res = showifemptystring(res)
     if len(res) > 2500:
       update.message.reply_text(res[0:2500])
     else:
