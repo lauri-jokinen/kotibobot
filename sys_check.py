@@ -18,7 +18,7 @@ def send_email(message):
   #message = "Test from Python via AuthSMTP"
   
   # Step 4 - Declare SMTP credentials
-  password = "lapamato"
+  password = koodit["kotikone_salasana"]
   username = "lauri.jokinen@kotikone.fi"
   smtphost = "smtpa.kolumbus.fi:587"
   
