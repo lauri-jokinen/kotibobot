@@ -157,7 +157,7 @@ def eq3_to_json(mac):
   return res_json
 
 #def mi_command_2(mac,return_dict):
-def mi_command(mac):
+def mi_command_2(mac):
   try:
     s = ['/home/lowpaw/Downloads/mi_scripts/LYWSD03MMC.py', '--device', mac, '--count', '1', '--unreachable-count', '3']
     res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 32)
@@ -195,13 +195,15 @@ def mi_command_3(mac):
     
   # Return results
   return return_dict['res']
-
-def mi_command_extra(mac):
-  res = mi_command_1(mac)
-  if "ERROR" in res:
-    return mi_command_1(mac)
-  return res
 '''
+def mi_command(mac):
+  res = mi_command_2(mac)
+  if "ERROR" in res or 'unsuccessful' in res:
+    res = mi_command_2(mac)
+    if "ERROR" in res or 'unsuccessful' in res:
+      return mi_command_2(mac)
+  return res
+
 def mi_to_json(mac):
   res = mi_command(mac)
   mi_json = json.loads("{}")
@@ -451,7 +453,9 @@ def plot_temp_48(selected_rooms):
   ax.xaxis.set_major_formatter(myFmt)
   
   #pyplot.show()
-  pyplot.savefig('time_series.png')
+  pyplot.savefig('/home/lowpaw/Downloads/kotibobot/kotibobot_target_temp.png')
+  #cmd1 = subprocess.Popen(['echo','098987'], stdout=subprocess.PIPE)
+  subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/kotibobot_target_temp.png', '/var/www/html/kotibobot/'])
 
 def plot_temp_offset(selected_rooms):
   data = load_ts_data()
@@ -517,7 +521,9 @@ def plot_temp_offset(selected_rooms):
   ax.xaxis.set_major_formatter(myFmt)
   
   #pyplot.show()
-  pyplot.savefig('time_series.png')
+  pyplot.savefig('/home/lowpaw/Downloads/kotibobot/kotibobot_offset.png')
+  #cmd1 = subprocess.Popen(['echo','098987'], stdout=subprocess.PIPE)
+  subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/kotibobot_offset.png', '/var/www/html/kotibobot/'])
 
 
 def plot_temp_days(selected_rooms):
@@ -569,7 +575,9 @@ def plot_temp_days(selected_rooms):
   ax.xaxis.set_major_formatter(myFmt)
   
   #pyplot.show()
-  pyplot.savefig('time_series.png')
+  pyplot.savefig('/home/lowpaw/Downloads/kotibobot/kotibobot_temp.png')
+  #cmd1 = subprocess.Popen(['echo','098987'], stdout=subprocess.PIPE)
+  subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/kotibobot_temp.png', '/var/www/html/kotibobot/'])
   
 def plot_humidity_days(selected_rooms):
   data = load_ts_data()
@@ -617,6 +625,8 @@ def plot_humidity_days(selected_rooms):
   ax.yaxis.grid(True, alpha=0.2)
   
   #pyplot.show()
-  pyplot.savefig('time_series.png')
+  pyplot.savefig('/home/lowpaw/Downloads/kotibobot/kotibobot_humidity.png')
+  #cmd1 = subprocess.Popen(['echo','098987'], stdout=subprocess.PIPE)
+  subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/kotibobot_humidity.png', '/var/www/html/kotibobot/'])
 
 #plot_ts(['työkkäri']) # , '2021-05-08T16:15', '2021-05-10T17:10'
