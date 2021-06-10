@@ -169,6 +169,12 @@ def plot_olkkari(update,context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
+  update.message.reply_text(kotibobot.plot_main_function(), parse_mode='HTML')
+  
+def plot_olkkari2(update,context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   selected_rooms = ['olkkari']
   data = kotibobot.load_ts_data()
   kotibobot.plot_temp_48(selected_rooms, data)
