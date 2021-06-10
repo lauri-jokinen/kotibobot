@@ -153,14 +153,15 @@ def plot_makkari(update,context):
   # Remove /-command
   #str = " ".join(str.split(" ")[1:])
   #selected_rooms = str.split(" ")[0].split("-")
+  data = kotibobot.load_ts_data()
   selected_rooms = ['makkari']
-  kotibobot.plot_temp_48(selected_rooms)
+  kotibobot.plot_temp_48(selected_rooms, data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
-  kotibobot.plot_temp_offset(selected_rooms)
+  kotibobot.plot_temp_offset(selected_rooms, data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
-  kotibobot.plot_temp_days(selected_rooms)
+  kotibobot.plot_temp_days(selected_rooms, data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
-  kotibobot.plot_humidity_days(selected_rooms)
+  kotibobot.plot_humidity_days(selected_rooms, data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
   update.message.reply_text(image_links, parse_mode='HTML')
   
@@ -169,13 +170,14 @@ def plot_olkkari(update,context):
     update.message.reply_text("You are not authorized.")
     return
   selected_rooms = ['olkkari']
-  kotibobot.plot_temp_48(selected_rooms)
+  data = kotibobot.load_ts_data()
+  kotibobot.plot_temp_48(selected_rooms, data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
-  kotibobot.plot_temp_offset(selected_rooms)
+  kotibobot.plot_temp_offset(selected_rooms, data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
-  kotibobot.plot_temp_days(selected_rooms)
+  kotibobot.plot_temp_days(selected_rooms, data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
-  kotibobot.plot_humidity_days(selected_rooms)
+  kotibobot.plot_humidity_days(selected_rooms, data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
   update.message.reply_text(image_links, parse_mode='HTML')
   
@@ -184,13 +186,14 @@ def plot_tyokkari(update,context):
     update.message.reply_text("You are not authorized.")
     return
   selected_rooms = ['työkkäri']
-  kotibobot.plot_temp_48(selected_rooms)
+  data = kotibobot.load_ts_data()
+  kotibobot.plot_temp_48(selected_rooms,data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
-  kotibobot.plot_temp_offset(selected_rooms)
+  kotibobot.plot_temp_offset(selected_rooms,data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
-  kotibobot.plot_temp_days(selected_rooms)
+  kotibobot.plot_temp_days(selected_rooms,data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
-  kotibobot.plot_humidity_days(selected_rooms)
+  kotibobot.plot_humidity_days(selected_rooms,data)
   #context.bot.send_photo(chat_id=update.message.chat_id, photo=open('time_series.png', 'rb'))
   update.message.reply_text(image_links, parse_mode='HTML')
 
