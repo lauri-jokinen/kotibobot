@@ -398,8 +398,55 @@ def load_ts_data():
   file_name = '/home/lowpaw/Downloads/kotibobot/' + datetime.today().strftime("%Y-%m") + '.pkl'
   return pd.read_pickle(file_name)
 
-def plot_temp_48(selected_rooms):
-  data = load_ts_data()
+def plot_temp_48_all_rooms(data_orig):
+  #data = load_ts_data()
+  data = data_orig
+  #data = pd.DataFrame(series)
+  #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
+  
+  #t_start = "2021-05-08T16:15"
+  #t_end   = "2021-05-10T17:10"
+  #data = data[data['time'] > pd.to_datetime(t_start, format="%Y-%m-%dT%H:%M")]
+  #data = data[data['time'] < pd.to_datetime(t_end, format="%Y-%m-%dT%H:%M")]
+  
+  t_start = datetime.now() - timedelta(hours = 48)
+  t_end = datetime.now()
+  
+  data = data[data['time'] > t_start]
+  data = data[data['time'] < t_end]
+  
+  temps = []
+  for room in rooms:
+    for sensor in mi_in_rooms[room]:
+      temps.append(sensor + " temp")
+  
+  ax = data.plot(x="time",y=(temps), alpha=0.7, color='r')
+  ax = data.plot(x="time",y=(targets), alpha=0.7,linestyle='dashed', ax=ax)
+  pyplot.ylabel('°C   ',rotation=0)
+  
+  lim = list(pyplot.ylim())
+  lim[0] = math.floor(lim[0])
+  lim[1] = math.ceil(lim[1])
+  
+  data.plot(x="time",y=(valves),secondary_y=True,linestyle=':', ax=ax, alpha=0.7) # ax=ax laittaa samaan kuvaan
+  pyplot.ylim([-2, 102])
+  ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
+  
+  ax.yaxis.grid(True, which='major', alpha = 0.2)
+  ax.yaxis.grid(True, which='minor')
+  ax.xaxis.grid(True, alpha=0.2)
+  pyplot.ylabel('%',rotation=0)
+  ax.set_xlabel('')
+  
+  myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
+  ax.xaxis.set_major_formatter(myFmt)
+  
+  #pyplot.show()
+  pyplot.savefig('time_series.png')
+
+def plot_temp_48(selected_rooms, data_orig):
+  #data = load_ts_data()
+  data = data_orig
   #data = pd.DataFrame(series)
   #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
   
@@ -453,8 +500,9 @@ def plot_temp_48(selected_rooms):
   #pyplot.show()
   pyplot.savefig('time_series.png')
 
-def plot_temp_offset(selected_rooms):
-  data = load_ts_data()
+def plot_temp_offset(selected_rooms, data_orig):
+  #data = load_ts_data()
+  data = data_orig
   #data = pd.DataFrame(series)
   #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
   
@@ -520,8 +568,9 @@ def plot_temp_offset(selected_rooms):
   pyplot.savefig('time_series.png')
 
 
-def plot_temp_days(selected_rooms):
-  data = load_ts_data()
+def plot_temp_days(selected_rooms, data_orig):
+  #data = load_ts_data()
+  data = data_orig
   #data = pd.DataFrame(series)
   #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
   
@@ -571,8 +620,9 @@ def plot_temp_days(selected_rooms):
   #pyplot.show()
   pyplot.savefig('time_series.png')
   
-def plot_humidity_days(selected_rooms):
-  data = load_ts_data()
+def plot_humidity_days(selected_rooms, data_orig):
+  #data = load_ts_data()
+  data = data_orig
   #data = pd.DataFrame(series)
   #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
   
