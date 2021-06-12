@@ -11,7 +11,7 @@ import pandas as pd
 from matplotlib import pyplot
 import matplotlib.dates as mdates # helps to format dates in x-axis
 import math
-import multiprocessing # timeout function for Mi-command
+import multiprocessing as mp # timeout function for Mi-command
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
@@ -686,7 +686,34 @@ def plot_humidity_days(room, data_orig):
 
 def html_link(text,url):
   return "<a href='https://cloud.laurijokinen.com/kotibobot/" + url + "'>" + text +"</a>"
-  
+
+def plot_parallel():
+  pool = mp.Pool(mp.cpu_count())
+  pool.map(plot_parallel_indivudal_tasks, [index for index in range(plot_parallel_task_length())])
+  pool.close()
+
+def plot_parallel_indivudal_tasks(index):
+  data_orig = load_ts_data()
+  if index == 0:
+    plot_temp_48_all_rooms(data_orig)
+  k = 1
+  for room in rooms:
+    if k == index:
+      plot_temp_48(room, data_orig)
+    if k+1 == index:
+      plot_temp_offset(room, data_orig)
+    if k+2 == index:
+      plot_temp_days(room, data_orig)
+    if k+3 == index:
+      plot_humidity_days(room, data_orig)
+    k=k+4
+    
+def plot_parallel_task_length():
+  k = 1
+  for room in rooms:
+    k=k+4
+  return k-1
+    
 def plot_main_function():
   data_orig = load_ts_data()
   res = ["Kaikki huoneet"] # in html
@@ -717,3 +744,29 @@ def read_latest_data():
   return '\n'.join(res)
 
 #print(read_latest_data())
+'''
+  q = multiprocessing.Queue()
+  # Create a shared dictionary for results
+  manager = multiprocessing.Manager()
+  return_dict = manager.dict()
+  
+  # Start process
+  p = multiprocessing.Process(target=mi_command_2, args=(mac,return_dict))
+  p.start()
+  
+  # Check every 0.1 seconds if the process is done
+  for i in range(250): #290
+    if not p.is_alive():
+      print('Odotus palkittiin ' +str(i/10) +' sekunnin jälkeen.')
+      break
+    time.sleep(0.1)
+  
+  # Kill if the process is still running after the wait
+  if p.is_alive():
+    print("Mi command is still running, let's kill it!")
+    return_dict['res'] = "ERROR: Mi device timeout."
+    p.terminate()
+    time.sleep(0.1)
+    p.join(timeout=2.0)
+    q.close()
+'''
