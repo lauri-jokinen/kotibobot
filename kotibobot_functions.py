@@ -423,7 +423,7 @@ def plot_temp_48_all_rooms(data_orig):
       temps.append(sensor + " temp")
   
   ax = data.plot(x="time",y=(temps), alpha=0.7)
-  pyplot.ylabel('°C   ',rotation=0)
+  pyplot.ylabel('    °C',rotation=0)
   
   lim = list(pyplot.ylim())
   lim[0] = math.floor(lim[0])
@@ -440,11 +440,13 @@ def plot_temp_48_all_rooms(data_orig):
   
   myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
   ax.xaxis.set_major_formatter(myFmt)
+  ax.yaxis.tick_right()
+  ax.yaxis.set_label_position("right")
   
   #pyplot.show()
   filename = 'temp_allrooms.svg'
-  pyplot.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
-  subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
+  pyplot.savefig('/var/www/html/kotibobot/' + filename)
+  #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link("Temperature, 48h all rooms", filename)
 
 def plot_temp_48(room, data_orig):
@@ -499,9 +501,8 @@ def plot_temp_48(room, data_orig):
   
   #pyplot.show()
   filename = room + '_target_temp.svg'
-  pyplot.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
-  #cmd1 = subprocess.Popen(['echo','098987'], stdout=subprocess.PIPE)
-  subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
+  pyplot.savefig('/var/www/html/kotibobot/' + filename)
+  #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link("Temperature, 48h", filename)
 
 def plot_temp_offset(room, data_orig):
@@ -566,9 +567,8 @@ def plot_temp_offset(room, data_orig):
   
   #pyplot.show()
   filename = room + '_offset.svg'
-  pyplot.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
-  #cmd1 = subprocess.Popen(['echo','098987'], stdout=subprocess.PIPE)
-  subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
+  pyplot.savefig('/var/www/html/kotibobot/' + filename)
+  #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link("Error, 48h", filename)
 
 
@@ -607,7 +607,7 @@ def plot_temp_days(room, data_orig):
   ax = data2.plot(x="time",y=temp,color='r', alpha=0.8)
   data1.plot(x="time",y=temp,linestyle='dashed',ax=ax,color='r', alpha=0.7) # ax=ax laittaa samaan kuvaan
   data0.plot(x="time",y=temp,linestyle=':',ax=ax,color='r', alpha=0.6) # ax=ax laittaa samaan kuvaan
-  pyplot.ylabel('°C   ',rotation=0)
+  pyplot.ylabel('    °C',rotation=0)
   ax.set_xlabel('')
   
   lim = list(pyplot.ylim())
@@ -619,12 +619,13 @@ def plot_temp_days(room, data_orig):
   
   myFmt = mdates.DateFormatter('%-H:%M')
   ax.xaxis.set_major_formatter(myFmt)
+  ax.yaxis.tick_right()
+  ax.yaxis.set_label_position("right")
   
   #pyplot.show()
   filename = room + '_temp.svg'
-  pyplot.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
-  #cmd1 = subprocess.Popen(['echo','098987'], stdout=subprocess.PIPE)
-  subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
+  pyplot.savefig('/var/www/html/kotibobot/' + filename)
+  #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link("Temperature, past three days", filename)
   
 def plot_humidity_days(room, data_orig):
@@ -661,7 +662,7 @@ def plot_humidity_days(room, data_orig):
   
   ax = data2.plot(x="time",y=humidity,color='b',alpha=0.8)
   pyplot.ylim([-2, 102])
-  pyplot.ylabel('% ',rotation=0)
+  pyplot.ylabel(' %',rotation=0)
   
   data1.plot(x="time",y=humidity,linestyle='dashed',ax=ax,color='b',alpha=0.7) # ax=ax laittaa samaan kuvaan
   data0.plot(x="time",y=humidity,linestyle=':',ax=ax,color='b',alpha=0.6) # ax=ax laittaa samaan kuvaan
@@ -671,12 +672,14 @@ def plot_humidity_days(room, data_orig):
   ax.xaxis.set_major_formatter(myFmt)
   ax.xaxis.grid(True, alpha=0.2)
   ax.yaxis.grid(True, alpha=0.2)
+  ax.yaxis.tick_right()
+  ax.yaxis.set_label_position("right")
   
   #pyplot.show()
   filename = room + '_humidity.svg'
-  pyplot.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
-  #cmd1 = subprocess.Popen(['echo','098987'], stdout=subprocess.PIPE)
-  subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
+  #pyplot.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
+  pyplot.savefig('/var/www/html/kotibobot/' + filename)
+  #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link("Humidity, past three days", filename)
 
 #plot_ts(['työkkäri']) # , '2021-05-08T16:15', '2021-05-10T17:10'
@@ -686,18 +689,31 @@ def html_link(text,url):
   
 def plot_main_function():
   data_orig = load_ts_data()
-  res = ["Kuvat:"] # in html
+  res = ["Kaikki huoneet"] # in html
   res.append(plot_temp_48_all_rooms(data_orig))
   for room in rooms:
-    res.append(room)
+    res.append("\n" + room.capitalize())
     res.append(plot_temp_48(room, data_orig))
     res.append(plot_temp_offset(room, data_orig))
     res.append(plot_temp_days(room, data_orig))
     res.append(plot_humidity_days(room, data_orig))
   return "\n".join(res)
 
+def read_latest_data():
+  data = load_ts_data()
+  index = len(data.index)-1
+  cols = data.columns.values.tolist()
+  res = ['Latest measurement at ' + str(data.iloc[index]['time'])]
+  for col in cols:
+    if not col == 'time':
+      if not math.isnan(data.iloc[-1][col]):
+        res.append(col + ' : ' + str(data.iloc[-1][col]))
+      else:
+        index = len(data.index)-1
+        while index > 0 and math.isnan(data.iloc[index][col]):
+          index = index - 1
+        res.append(col + ' : ' + str(data.iloc[index][col]) + ' (timestamp: ' + str(data.iloc[index]['time']) + ')')
+  res.sort()
+  return '\n'.join(res)
 
-
-
-
-
+#print(read_latest_data())

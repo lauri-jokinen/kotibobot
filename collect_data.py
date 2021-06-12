@@ -19,7 +19,6 @@ def collect_and_save():
   for room in selected_rooms:
     for eq3 in kotibobot.eq3_in_rooms[room]:
       eq3_reading = kotibobot.eq3_to_json(kotibobot.name_to_mac[eq3])
-      #new_data[valve + " target"] = json.loads("{}")
       new_data[eq3 + " target"] = eq3_reading['target']
       new_data[eq3 + " valve"]  = eq3_reading['valve']
       new_data[eq3 + " offset"] = eq3_reading['offset']
