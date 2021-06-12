@@ -402,8 +402,9 @@ def load_ts_data():
 
 def plot_temp_48_all_rooms(data_orig, make_plot = True):
   filename = 'temp_allrooms.svg'
+  plotname = "Temperature, 48h all rooms"
   if not make_plot:
-    return html_link("Temperature, 48h all rooms", filename)
+    return html_link(plotname, filename)
   #data = load_ts_data()
   data = data_orig
   #data = pd.DataFrame(series)
@@ -450,12 +451,13 @@ def plot_temp_48_all_rooms(data_orig, make_plot = True):
   
   pyplot.savefig('/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
-  return html_link("Temperature, 48h all rooms", filename)
+  return html_link(plotname, filename)
 
 def plot_temp_48(room, data_orig, make_plot = True):
   filename = room + '_target_temp.svg'
+  plotname = "Temperature, 48h"
   if not make_plot:
-    return html_link("Temperature, 48h", filename)
+    return html_link(plotname, filename)
   #data = load_ts_data()
   data = data_orig
   #data = pd.DataFrame(series)
@@ -509,12 +511,13 @@ def plot_temp_48(room, data_orig, make_plot = True):
   
   pyplot.savefig('/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
-  return html_link("Temperature, 48h", filename)
+  return html_link(plotname, filename)
 
 def plot_temp_offset(room, data_orig, make_plot = True):
   filename = room + '_offset.svg'
+  plotname = "Error, 48h"
   if not make_plot:
-    return html_link("Error, 48h", filename)
+    return html_link(plotname, filename)
   #data = load_ts_data()
   data = data_orig
   #data = pd.DataFrame(series)
@@ -578,13 +581,14 @@ def plot_temp_offset(room, data_orig, make_plot = True):
   
   pyplot.savefig('/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
-  return html_link("Error, 48h", filename)
+  return html_link(plotname, filename)
 
 
 def plot_temp_days(room, data_orig, make_plot = True):
   filename = room + '_temp.svg'
+  plotname = "Temperature, past three days"
   if not make_plot:
-    return html_link("Temperature, past three days", filename)
+    return html_link(plotname, filename)
   #data = load_ts_data()
   data = data_orig
   #data = pd.DataFrame(series)
@@ -637,12 +641,13 @@ def plot_temp_days(room, data_orig, make_plot = True):
   #pyplot.show()
   pyplot.savefig('/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
-  return html_link("Temperature, past three days", filename)
+  return html_link(plotname, filename)
   
 def plot_humidity_days(room, data_orig, make_plot = True):
   filename = room + '_humidity.svg'
+  plotname = "Humidity, past three days"
   if not make_plot:
-    return html_link("Humidity, past three days", filename)
+    return html_link(plotname, filename)
   #data = load_ts_data()
   data = data_orig
   #data = pd.DataFrame(series)
@@ -693,7 +698,7 @@ def plot_humidity_days(room, data_orig, make_plot = True):
   #pyplot.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
   pyplot.savefig('/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
-  return html_link("Humidity, past three days", filename)
+  return html_link(plotname, filename)
 
 #plot_ts(['työkkäri']) # , '2021-05-08T16:15', '2021-05-10T17:10'
 
