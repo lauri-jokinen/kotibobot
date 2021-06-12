@@ -400,7 +400,10 @@ def load_ts_data():
   file_name = '/home/lowpaw/Downloads/kotibobot/' + datetime.today().strftime("%Y-%m") + '.pkl'
   return pd.read_pickle(file_name)
 
-def plot_temp_48_all_rooms(data_orig):
+def plot_temp_48_all_rooms(data_orig, make_plot = True):
+  filename = 'temp_allrooms.svg'
+  if not make_plot:
+    return html_link("Temperature, 48h all rooms", filename)
   #data = load_ts_data()
   data = data_orig
   #data = pd.DataFrame(series)
@@ -444,12 +447,15 @@ def plot_temp_48_all_rooms(data_orig):
   ax.yaxis.set_label_position("right")
   
   #pyplot.show()
-  filename = 'temp_allrooms.svg'
+  
   pyplot.savefig('/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link("Temperature, 48h all rooms", filename)
 
-def plot_temp_48(room, data_orig):
+def plot_temp_48(room, data_orig, make_plot = True):
+  filename = room + '_target_temp.svg'
+  if not make_plot:
+    return html_link("Temperature, 48h", filename)
   #data = load_ts_data()
   data = data_orig
   #data = pd.DataFrame(series)
@@ -500,12 +506,15 @@ def plot_temp_48(room, data_orig):
   ax.xaxis.set_major_formatter(myFmt)
   
   #pyplot.show()
-  filename = room + '_target_temp.svg'
+  
   pyplot.savefig('/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link("Temperature, 48h", filename)
 
-def plot_temp_offset(room, data_orig):
+def plot_temp_offset(room, data_orig, make_plot = True):
+  filename = room + '_offset.svg'
+  if not make_plot:
+    return html_link("Error, 48h", filename)
   #data = load_ts_data()
   data = data_orig
   #data = pd.DataFrame(series)
@@ -566,13 +575,16 @@ def plot_temp_offset(room, data_orig):
   ax.xaxis.set_major_formatter(myFmt)
   
   #pyplot.show()
-  filename = room + '_offset.svg'
+  
   pyplot.savefig('/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link("Error, 48h", filename)
 
 
-def plot_temp_days(room, data_orig):
+def plot_temp_days(room, data_orig, make_plot = True):
+  filename = room + '_temp.svg'
+  if not make_plot:
+    return html_link("Temperature, past three days", filename)
   #data = load_ts_data()
   data = data_orig
   #data = pd.DataFrame(series)
@@ -623,12 +635,14 @@ def plot_temp_days(room, data_orig):
   ax.yaxis.set_label_position("right")
   
   #pyplot.show()
-  filename = room + '_temp.svg'
   pyplot.savefig('/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link("Temperature, past three days", filename)
   
-def plot_humidity_days(room, data_orig):
+def plot_humidity_days(room, data_orig, make_plot = True):
+  filename = room + '_humidity.svg'
+  if not make_plot:
+    return html_link("Humidity, past three days", filename)
   #data = load_ts_data()
   data = data_orig
   #data = pd.DataFrame(series)
@@ -676,7 +690,6 @@ def plot_humidity_days(room, data_orig):
   ax.yaxis.set_label_position("right")
   
   #pyplot.show()
-  filename = room + '_humidity.svg'
   #pyplot.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
   pyplot.savefig('/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
@@ -696,16 +709,21 @@ def plot_parallel_indivudal_tasks(index):
   data_orig = load_ts_data()
   if index == 0:
     plot_temp_48_all_rooms(data_orig)
+    return
   k = 1
   for room in rooms:
     if k == index:
       plot_temp_48(room, data_orig)
+      return
     if k+1 == index:
       plot_temp_offset(room, data_orig)
+      return
     if k+2 == index:
       plot_temp_days(room, data_orig)
+      return
     if k+3 == index:
       plot_humidity_days(room, data_orig)
+      return
     k=k+4
     
 def plot_parallel_task_length():
@@ -716,14 +734,15 @@ def plot_parallel_task_length():
     
 def plot_main_function():
   data_orig = load_ts_data()
+  plot_parallel()
   res = ["Kaikki huoneet"] # in html
-  res.append(plot_temp_48_all_rooms(data_orig))
+  res.append(plot_temp_48_all_rooms(data_orig, False))
   for room in rooms:
     res.append("\n" + room.capitalize())
-    res.append(plot_temp_48(room, data_orig))
-    res.append(plot_temp_offset(room, data_orig))
-    res.append(plot_temp_days(room, data_orig))
-    res.append(plot_humidity_days(room, data_orig))
+    res.append(plot_temp_48(room, data_orig, False))
+    res.append(plot_temp_offset(room, data_orig, False))
+    res.append(plot_temp_days(room, data_orig, False))
+    res.append(plot_humidity_days(room, data_orig, False))
   return "\n".join(res)
 
 def read_latest_data():
