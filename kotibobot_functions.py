@@ -156,6 +156,15 @@ def eq3_to_json(mac):
     res_json['offset'] = float('nan')
   return res_json
 
+def restart_bluetooth():
+  try:
+    s = ['sudo', '/etc/init.d/bluetooth', 'restart']
+    res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 5)
+    res_str = res.stdout.decode('utf-8')
+  except:
+    res_str = "ERROR: Bluetooth could not be restarted"
+  return res_str
+
 #def mi_command_2(mac,return_dict):
 def mi_command_2(mac):
   try:
@@ -710,7 +719,7 @@ def plot_parallel():
     plot_parallel_indivudal_tasks(index)
 
 def plot_parallel_indivudal_tasks(index):
-  time.sleep(index*0.1)
+  #time.sleep(index*0.1)
   data_orig = load_ts_data()
   if index == 0:
     plot_temp_48_all_rooms(data_orig)
@@ -755,7 +764,9 @@ def read_latest_data():
   data = load_ts_data()
   index = len(data.index)-1
   cols = data.columns.values.tolist()
-  res = ['Latest measurement at ' + str(data.iloc[index]['time'])]
+  timeformat = '%-d.%-m. klo %-H:%M'
+  
+  res = ['Latest measurement at ' + str(data.iloc[index]['time'].strftime(timeformat)) + '\n']
   for col in cols:
     if not col == 'time':
       if not math.isnan(data.iloc[-1][col]):
@@ -764,7 +775,7 @@ def read_latest_data():
         index = len(data.index)-1
         while index > 0 and math.isnan(data.iloc[index][col]):
           index = index - 1
-        res.append(col + ' : ' + str(data.iloc[index][col]) + ' (timestamp: ' + str(data.iloc[index]['time']) + ')')
+        res.append(col + ' : ' + str(data.iloc[index][col]) + ' (timestamp: ' + str(data.iloc[index]['time'].strftime(timeformat)) + ')')
   res.sort()
   return '\n'.join(res)
 

@@ -150,6 +150,9 @@ def mi_status(update,context):
 def data_command(update, context):
   update.message.reply_text(kotibobot.read_latest_data())
 
+def restart_bluetooth(update, context):
+  print(kotibobot.restart_bluetooth())
+
 def main():
   # Create Updater object and attach dispatcher to it
   updater = Updater(koodit["kotibobot"])
@@ -165,6 +168,7 @@ def main():
   command_tyokkari_handler = CommandHandler('tyokkari', tyokkaricommand)
   command_makkari_handler = CommandHandler('makkari', makkaricommand)
   data_handler = CommandHandler('data', data_command)
+  restartBT_handler = CommandHandler('restartBT', restart_bluetooth)
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
@@ -174,6 +178,7 @@ def main():
   dispatcher.add_handler(command_makkari_handler)
   dispatcher.add_handler(command_tyokkari_handler)
   dispatcher.add_handler(data_handler)
+  dispatcher.add_handler(restartBT_handler)
 
   # Start the bot
   updater.start_polling()
