@@ -4,8 +4,6 @@ import json
 import pandas as pd
 import time
 
-#hrelo
-
 def collect_and_save():
   new_data = json.loads("{}")
   
@@ -51,4 +49,9 @@ while True:
   collect_and_save()
   time.sleep(60*5)
   kotibobot.restart_bluetooth()
-  time.sleep(60*5)
+  time.sleep(60*1)
+  try:
+    kotibobot.command_queue_do()
+  except:
+    print('Queue run failed')
+  time.sleep(60*4)

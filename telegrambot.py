@@ -153,6 +153,25 @@ def data_command(update, context):
 def restart_bluetooth(update, context):
   print(kotibobot.restart_bluetooth())
 
+def command_queue_append(update, context):
+  str = update.message.text
+  str = " ".join(str.split(" ")[1:]) # Removes the /-command
+  update.message.reply_text('Kirjoitetaan komentoa muistiin...')
+  kotibobot.command_queue_append(str)
+  update.message.reply_text('Kirjoittaminen onnistui!')
+
+def command_queue_print(update, context):
+  update.message.reply_text(kotibobot.command_queue_print())
+
+def command_queue_wipe(update, context):
+  update.message.reply_text(kotibobot.command_queue_wipe())
+
+def command_queue_do(update, context):
+  update.message.reply_text('Suoritetaan komentojonoa...')
+  kotibobot.command_queue_do()
+  update.message.reply_text('Tehty!')
+  command_queue_print(update, context)
+
 def main():
   # Create Updater object and attach dispatcher to it
   updater = Updater(koodit["kotibobot"])
@@ -169,6 +188,10 @@ def main():
   command_makkari_handler = CommandHandler('makkari', makkaricommand)
   data_handler = CommandHandler('data', data_command)
   restartBT_handler = CommandHandler('restartBT', restart_bluetooth)
+  command_queue_append_handler = CommandHandler('addtoqueue', command_queue_append)
+  command_queue_print_handler = CommandHandler('printqueue', command_queue_print)
+  command_queue_wipe_handler = CommandHandler('wipequeue', command_queue_wipe)
+  command_queue_do_handler = CommandHandler('runqueue', command_queue_do)
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
@@ -179,6 +202,10 @@ def main():
   dispatcher.add_handler(command_tyokkari_handler)
   dispatcher.add_handler(data_handler)
   dispatcher.add_handler(restartBT_handler)
+  dispatcher.add_handler(command_queue_append_handler)
+  dispatcher.add_handler(command_queue_print_handler)
+  dispatcher.add_handler(command_queue_wipe_handler)
+  dispatcher.add_handler(command_queue_do_handler)
 
   # Start the bot
   updater.start_polling()
