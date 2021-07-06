@@ -1,5 +1,5 @@
 # kotibobot
-With a Telegram bot, and a computer with Bluetooth, we can control Eqiva eQ-3 radiator thermostats, and read Xiaomi Mi -temperature and humidity sensors. I use this repository to build my smart home, and I plan to connect new devices to it along the way.
+With a Telegram bot, and a computer with Bluetooth, we can control Eqiva eQ-3 Smart Radiator Thermostats, and read Xiaomi Mi -temperature and humidity sensors. I use this repository to build my smart home, and I plan to connect new devices to it along the way.
 
 With these scripts you...
 * can read and control the temperature of your house anywhere on the planet via a Telegrambot.
