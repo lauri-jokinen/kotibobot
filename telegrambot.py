@@ -172,6 +172,9 @@ def command_queue_do(update, context):
   update.message.reply_text('Tehty!')
   command_queue_print(update, context)
 
+def outside_temp(update, context):
+  update.message.reply_text(kotibobot.outside_temp())
+
 def main():
   # Create Updater object and attach dispatcher to it
   updater = Updater(koodit["kotibobot"])

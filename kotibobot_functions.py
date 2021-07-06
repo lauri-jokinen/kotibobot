@@ -12,6 +12,7 @@ from matplotlib import pyplot
 import matplotlib.dates as mdates # helps to format dates in x-axis
 import math
 #import multiprocessing as mp # timeout function for Mi-command
+import fmi_weather_client as fmi
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
@@ -82,7 +83,7 @@ for room in rooms:
     for mi in rooms[room]["mi"]:
       mi_in_rooms[room].append(mac_to_name[mi])
 
-#### FUNCTIONS
+### FUNCTIONS FOR CONTROLLING DEVICES / READING DATA ###
 
 def replace_macs_to_names(str):
   for mac in mac_to_name:
@@ -175,36 +176,7 @@ def mi_command_2(mac):
     res_str = "ERROR: Unknown error with a Mi device."
   return res_str
   #return_dict['res'] = res_str
-'''
-def mi_command_3(mac):
-  q = multiprocessing.Queue()
-  # Create a shared dictionary for results
-  manager = multiprocessing.Manager()
-  return_dict = manager.dict()
-  
-  # Start process
-  p = multiprocessing.Process(target=mi_command_2, args=(mac,return_dict))
-  p.start()
-  
-  # Check every 0.1 seconds if the process is done
-  for i in range(250): #290
-    if not p.is_alive():
-      print('Odotus palkittiin ' +str(i/10) +' sekunnin jälkeen.')
-      break
-    time.sleep(0.1)
-  
-  # Kill if the process is still running after the wait
-  if p.is_alive():
-    print("Mi command is still running, let's kill it!")
-    return_dict['res'] = "ERROR: Mi device timeout."
-    p.terminate()
-    time.sleep(0.1)
-    p.join(timeout=2.0)
-    q.close()
-    
-  # Return results
-  return return_dict['res']
-'''
+
 def mi_command(mac):
   res = mi_command_2(mac)
   if "ERROR" in res or 'unsuccessful' in res:
@@ -252,158 +224,14 @@ def remove_extra_spaces(str):
       i = i+1
   return " ".join(arr)
   
-# command : 'mac timer mon 22.5'
+# command could be e.g. 'mac timer mon 22.5'
 def in_allday_timer_format(command):
   arr = command.split(" ")
   return (len(arr) == 4 and arr[1] == 'timer')
 
-"""
-FUNCTIONS THAT ARE NO LONGER USED
-# command : 'mac timer mon 19:00-20:00 22.5'
-# command is identified by 'timer', number of spaces, and '-' between the times
-def in_new_timer_format(command):
-  arr = command.split(" ")  
-  if len(arr) == 5 and arr[1] == 'timer':
-    times = arr[3].split("-")
-    return len(times) == 2
-  return False
 
-def str_to_time(str):
-    if str == '24:00':
-        return datetime.strptime('1900-01-02 00:00', '%Y-%m-%d %H:%M')
-    else:
-        return datetime.strptime(str, '%H:%M')
+### TIME SERIES PLOTTING ###
 
-def new_timer_command(old_command, new_command):
-    # Convert str to time
-    try:
-        t1 = str_to_time(new_command.split('-')[0])
-        t2 = str_to_time(new_command.split('-')[1].split(" ")[0])
-        temp = new_command.split(" ")[1]
-        temp_float = float(temp)
-    except:
-        return "ERROR: Invalid syntax. Example of a valid input: '9:30-10:00 18.5'"
-    if t1 >= t2:
-        return "ERROR: Invalid time period."
-
-    if t1.strftime("%M")[-1] != '0' or t2.strftime("%M")[-1] != '0':
-        return "ERROR: The times must be rounded to ten minutes. For example, 19:11 is invalid and 19:10 is valid."
-
-    if 2*temp_float % 1 != 0.0:
-        return "ERROR: Temperature must be rouded to a half of a celsius."
-
-    if temp_float < 5 or temp_float > 29.5:
-        return "ERROR: Temperature must lie in between 5 and 29.5."
-    
-    old = old_command.split(' ')
-    
-    # Look for the indices where to remove the old array
-    # we keep [0:start_ind] and [end_ind:]
-    i = 0
-    start_ind = -1
-    while start_ind == -1 and i < len(old)/2:
-        if str_to_time(old[1+2*i]) >= t1:
-            start_ind = 2*i+1
-        i = i+1
-    
-    i = 0
-    end_ind = -1
-    while end_ind == -1 and i < len(old)/2:
-        if str_to_time(old[1+2*i]) > t2:
-            end_ind = 2*i
-        i = i+1
-    
-    # Create new array, from the start
-    if start_ind != -1:
-        new_arr = old[0:start_ind]
-    else:
-        new_arr = []
-    
-    # Add new timer settings
-    new_arr.append(t1.strftime("%H:%M"))
-    new_arr.append(temp)
-    if new_command.split('-')[1].split(" ")[0] == '24:00':
-        new_arr.append('24:00')
-    else:
-        new_arr.append(t2.strftime("%H:%M"))
-    
-    # Add the rest of the old timer setting
-    if end_ind != -1:
-        new_arr = new_arr + old[end_ind:]
-    
-    # Remove possible '00:00'
-    if new_arr[1] == '00:00':
-        new_arr = new_arr[2:]
-    
-    # Cleanup: remove the same consecutive temperatures
-    i = 0
-    while i+2 < len(new_arr):
-        if float(new_arr[i]) == float(new_arr[i+2]):
-            new_arr = new_arr[0:i] + new_arr[(i+2):]
-        else:
-            i = i+2
-
-    # See if the schedule is too long
-    if len(new_arr)/2 > 7:
-        return "ERROR: Too complicated schedule. Up to seven events are possible per day."
-    return " ".join(new_arr)
-
-
-#Luo funktio : timer1 == timer2;
-
-def set_different_days_with_new_timer_command(old, new_command, days):
-  #old = [mon: '', ...]
-  #new_command = 
-  print(old)
-  print(new_command)
-  print(days)
-  
-  if days == 'everyday':
-    day_set = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri']
-  elif days == 'weekend':
-    day_set = ['sat', 'sun']
-  else:
-    day_set = [days] # eli esim. ['mon']
-  
-  all_equal = True
-  timer_first = new_timer_command(old[day_set[0]], new_command)
-  print('Eka päivä:')
-  print(timer_first)
-  
-  for day in day_set:
-    if not timers_equal(timer_first, new_timer_command(old[day], new_command)):
-      all_equal = False
-  
-  if all_equal:
-    print('kaikki päivät samanlaisia; lopullinen komento:')
-    print(days + ' ' + timer_first)
-    return [days + ' ' + timer_first]
-    
-  else:
-    res_set = []
-    print('kaikki päivät ei samanlaisia; lopulliset komennot:')
-    for day in day_set:
-      print(day + ' ' + new_timer_command(old[day], new_command))
-      res_set.append(day + ' ' + new_timer_command(old[day], new_command))
-    return res_set
-
-# e.g., '25 10:00 13 24:00'
-def timers_equal(one, other):
-  a = one.split(' ')
-  b = other.split(' ')
-  if len(a) != len(b):
-    return False
-  
-  for i in range(len(a)):
-    if i%2 == 0:
-      if float(a[i]) != float(b[i]):
-        return False
-    else:
-      if str_to_time(a[i]) != str_to_time(b[i]):
-        return False
-  return True
-"""
-# TIME SERIES PLOTTING
 
 def load_ts_data():
   file_name = '/home/lowpaw/Downloads/kotibobot/' + datetime.today().strftime("%Y-%m") + '.pkl'
@@ -436,6 +264,7 @@ def plot_temp_48_all_rooms(data_orig, make_plot = True):
       temps.append(sensor + " temp")
   
   ax = data.plot(x="time",y=(temps), alpha=0.7)
+  data.plot(x="time",y="outside temp", alpha=0.7, ax=ax, linestyle='dashed')
   pyplot.ylabel('    °C',rotation=0)
   
   lim = list(pyplot.ylim())
@@ -779,9 +608,6 @@ def read_latest_data():
   res.sort()
   return '\n'.join(res)
 
-#print(read_latest_data())
-#plot_main_function()
-
 def command_queue_read():
   fo = open('/home/lowpaw/Downloads/kotibobot/command_queue.txt', 'r')
   commands = fo.read()
@@ -820,3 +646,7 @@ def command_queue_wipe():
   commands = '\n'.join(command_queue_read())
   command_queue_rewrite('')
   return 'Komennot pyyhitty! Ne olivat:\n\n' + commands
+
+def outside_temp():
+  weather = fmi.weather_by_coordinates(60.19078966723265, 24.832829160598983)
+  return weather.data.temperature.value
