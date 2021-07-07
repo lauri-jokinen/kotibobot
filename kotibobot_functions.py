@@ -628,7 +628,7 @@ def command_queue_do():
   queue = command_queue_read()
   i = 0
   while i < len(queue):
-    res = eq3_command_human(queue[i])
+    res = " ".join(eq3_command_human(queue[i]))
     if not ("ERROR" in res or "failed" in res):
       queue.pop(i)
     else:
