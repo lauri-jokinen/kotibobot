@@ -312,7 +312,8 @@ def plot_temp_48_all_rooms(data_orig, a, make_plot = True):
   #plt.ylabel('%',rotation=0)
   ax.set_xlabel('')
   
-  myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
+  myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
+  plt.xticks(rotation=0, ha='center')
   ax.xaxis.set_major_formatter(myFmt)
   ax.yaxis.tick_right()
   ax.yaxis.set_label_position("right")
@@ -377,7 +378,8 @@ def plot_temp_48(room, data_orig, a, make_plot = True):
   plt.ylabel('%',rotation=0)
   ax.set_xlabel('')
   
-  myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
+  myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
+  plt.xticks(rotation=0, ha='center')
   ax.xaxis.set_major_formatter(myFmt)
   
   #plt.show()
@@ -450,7 +452,8 @@ def plot_temp_offset(room, data_orig, a, make_plot = True):
   ax.yaxis.grid(True, which='minor')
   ax.xaxis.grid(True, alpha=0.2)
   
-  myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
+  myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
+  plt.xticks(rotation=0, ha='center')
   ax.xaxis.set_major_formatter(myFmt)
   
   #plt.show()
@@ -588,6 +591,7 @@ def plot_humidity_days(room, data_orig, a, make_plot = True):
 def html_link(text,url):
   return "<a href='https://cloud.laurijokinen.com/kotibobot/" + url + "'>" + text +"</a>"
 
+'''
 def plot_parallel():
   for index in range(plot_parallel_task_length()):
     plot_parallel_indivudal_tasks(index)
@@ -619,26 +623,22 @@ def plot_parallel_task_length():
   for room in rooms:
     k=k+4
   return k-1
-    
-def plot_main_function():
+'''
+
+def plot_main_function(draw_plots = True):
   data_orig = load_ts_data()
-  #plot_parallel()
-  
-  t = time.time()
   
   a = AsyncPlotter()
   res = ["Kaikki huoneet"] # in html
-  res.append(plot_temp_48_all_rooms(data_orig,a))
+  res.append(plot_temp_48_all_rooms(data_orig,a,draw_plots))
   for room in rooms:
     res.append("\n" + room.capitalize())
-    res.append(plot_temp_48(room, data_orig,a))
-    res.append(plot_temp_offset(room, data_orig,a))
-    res.append(plot_temp_days(room, data_orig,a))
-    res.append(plot_humidity_days(room, data_orig,a))
+    res.append(plot_temp_48(room, data_orig,a,draw_plots))
+    res.append(plot_temp_offset(room, data_orig,a,draw_plots))
+    res.append(plot_temp_days(room, data_orig,a,draw_plots))
+    res.append(plot_humidity_days(room, data_orig,a,draw_plots))
   a.join()
   plt.close('all')
-  
-  print('Total plotting time: ' + str(time.time() - t))
   
   return "\n".join(res)
 

@@ -127,8 +127,7 @@ def plot_data(update,context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
-  update.message.reply_text("Piirretään kuvia...")
-  update.message.reply_text(kotibobot.plot_main_function(), parse_mode='HTML')
+  update.message.reply_text(kotibobot.plot_main_function(False), parse_mode='HTML')
 
 def mi_status(update,context):
   if not authorized(update, context):
