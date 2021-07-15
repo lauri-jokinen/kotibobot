@@ -49,6 +49,7 @@ def collect_and_save():
 
 while True:
   collect_and_save()
+  kotibobot.plot_main_function()
   time.sleep(60*5)
   kotibobot.restart_bluetooth()
   time.sleep(60*1)
