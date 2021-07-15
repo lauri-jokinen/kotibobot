@@ -3,40 +3,14 @@ import json
 import kotibobot_functions as kotibobot
 from datetime import datetime
 
-image_links = """<a href='https://cloud.laurijokinen.com/kotibobot/kotibobot_target_temp.png'>Lämpötila 48h</a>
-<a href='https://cloud.laurijokinen.com/kotibobot/kotibobot_offset.png'>Lämpötilan virhe 48h</a>
-<a href='https://cloud.laurijokinen.com/kotibobot/kotibobot_temp.png'>Lämpötila, 3 viimeistä päivää päällekkäin</a>
-<a href='https://cloud.laurijokinen.com/kotibobot/kotibobot_humidity.png'>Kosteus, 3 viimeistä päivää päällekkäin</a>"""
+with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
+    koodit = json.load(json_file)
 
 def showifemptystring(s):
   if s == '':
     return 'Empty output'
   else:
     return s
-
-def get_chat_id(update, context):
-  chat_id = -1
-
-  if update.message is not None:
-    # from a text message
-    chat_id = update.message.chat.id
-  elif update.callback_query is not None:
-    # from a callback message
-    chat_id = update.callback_query.message.chat.id
-
-  return chat_id
-
-with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
-    koodit = json.load(json_file)
-
-def remove_spaces_from_front(text):
-  if text == "":
-    return text
-  while text[0] == " ":
-    text = text[1:]
-    if text == "":
-      return text
-  return text
   
 def authorized(update, context):
   return update.message.from_user.id in koodit["lowpaw_teleID"]
@@ -84,7 +58,7 @@ def direct_eq3_command(update, context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
-  update.message.reply_text("Yhdistetään laitteisiin...")
+  waiting_message = update.message.reply_text("Yhdistetään laitteisiin...")
   str = update.message.text
   str = " ".join(str.split(" ")[1:]) # Removes /-command
   res_array = kotibobot.eq3_command_human(str)
@@ -94,6 +68,7 @@ def direct_eq3_command(update, context):
       update.message.reply_text(res[0:2500])
     else:
       update.message.reply_text(res)
+  waiting_message.delete()
 
 def makkaricommand(update,context):
   room_command(update,context,'makkari')
@@ -108,7 +83,7 @@ def room_command(update,context,room):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
-  update.message.reply_text("Yhdistetään laitteisiin...")
+  waiting_message = update.message.reply_text("Yhdistetään laitteisiin...")
   str = update.message.text
   str = " ".join(str.split(" ")[1:]) # Removes the /-command
   if str == "":
@@ -122,6 +97,7 @@ def room_command(update,context,room):
       update.message.reply_text(res[0:2500])
     else:
       update.message.reply_text(res)
+  waiting_message.delete()
 
 def plot_data(update,context):
   if not authorized(update, context):
@@ -133,7 +109,7 @@ def mi_status(update,context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
-  update.message.reply_text("Yhdistetään laitteeseen...")
+  waiting_message = update.message.reply_text("Yhdistetään laitteeseen...")
   str = update.message.text
   str = " ".join(str.split(" ")[1:]) # Removes the /-command
   res_array = kotibobot.mi_read_human(str)
@@ -145,19 +121,27 @@ def mi_status(update,context):
       update.message.reply_text(res[0:2500])
     else:
       update.message.reply_text(res)
+  waiting_message.delete()
   
 def data_command(update, context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   update.message.reply_text(kotibobot.read_latest_data())
 
 def restart_bluetooth(update, context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
   print(kotibobot.restart_bluetooth())
 
 def command_queue_append(update, context):
   str = update.message.text
   str = " ".join(str.split(" ")[1:]) # Removes the /-command
-  update.message.reply_text('Kirjoitetaan komentoa muistiin...')
+  waiting_message = update.message.reply_text('Kirjoitetaan komentoa muistiin...')
   kotibobot.command_queue_append(str)
   update.message.reply_text('Kirjoittaminen onnistui!')
+  waiting_message.delete()
 
 def command_queue_print(update, context):
   update.message.reply_text(kotibobot.command_queue_print())
@@ -166,10 +150,11 @@ def command_queue_wipe(update, context):
   update.message.reply_text(kotibobot.command_queue_wipe())
 
 def command_queue_do(update, context):
-  update.message.reply_text('Suoritetaan komentojonoa...')
+  waiting_message = update.message.reply_text('Suoritetaan komentojonoa...')
   kotibobot.command_queue_do()
-  update.message.reply_text('Tehty!')
+  update.message.reply_text('Tehty! Jono on nyt seuraava:')
   command_queue_print(update, context)
+  waiting_message.delete()
 
 def outside_temp(update, context):
   update.message.reply_text(kotibobot.outside_temp())
