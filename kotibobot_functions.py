@@ -8,11 +8,39 @@ import dateutil.parser
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot
+#from matplotlib import pyplot
+import matplotlib
 import matplotlib.dates as mdates # helps to format dates in x-axis
 import math
-#import multiprocessing as mp # timeout function for Mi-command
+import multiprocessing as mp # asychronous plotting
 import fmi_weather_client as fmi
+
+matplotlib.use('svg') # no GUI when plotting
+
+# asychronous plotting https://gist.github.com/astrofrog
+class AsyncPlotter:
+    def __init__(self, processes=mp.cpu_count()): #
+        self.manager = mp.Manager()
+        self.nc = self.manager.Value("i", 0)
+        self.pids = []
+        self.processes = processes
+    def async_plotter(self, nc, fig, filename, processes):
+        while nc.value >= processes:
+            time.sleep(0.05)
+        nc.value += 1
+        #print("Plotting " + filename)
+        fig.savefig(filename)
+        plt.close(fig)
+        nc.value -= 1
+    def save(self, fig, filename):
+        p = mp.Process(
+            target=self.async_plotter, args=(self.nc, fig, filename, self.processes)
+        )
+        p.start()
+        self.pids.append(p)
+    def join(self):
+        for p in self.pids:
+            p.join()
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
@@ -237,7 +265,8 @@ def load_ts_data():
   file_name = '/home/lowpaw/Downloads/kotibobot/' + datetime.today().strftime("%Y-%m") + '.pkl'
   return pd.read_pickle(file_name)
 
-def plot_temp_48_all_rooms(data_orig, make_plot = True):
+def plot_temp_48_all_rooms(data_orig, a, make_plot = True):
+  plt.ioff()
   filename = 'temp_allrooms.svg'
   plotname = "Temperature, 48h all rooms"
   if not make_plot:
@@ -263,21 +292,24 @@ def plot_temp_48_all_rooms(data_orig, make_plot = True):
     for sensor in mi_in_rooms[room]:
       temps.append(sensor + " temp")
   
-  ax = data.plot(x="time",y=(temps), alpha=0.7)
-  data.plot(x="time",y="outside temp", alpha=0.7, ax=ax, linestyle='dashed')
-  pyplot.ylabel('    °C',rotation=0)
   
-  lim = list(pyplot.ylim())
+  fig, ax = plt.subplots()
+  #ax = data.plot(x="time",y=(temps), alpha=0.7)
+  data.plot(x="time",y=(temps), alpha=0.7, ax=ax)
+  data.plot(x="time",y="outside temp", alpha=0.7, ax=ax, linestyle='dashed')
+  plt.ylabel('    °C',rotation=0)
+  
+  lim = list(plt.ylim())
   lim[0] = math.floor(lim[0])
   lim[1] = math.ceil(lim[1])
   
-  #pyplot.ylim([-2, 102])
+  #plt.ylim([-2, 102])
   ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
   
   ax.yaxis.grid(True, which='major', alpha = 0.2)
   ax.yaxis.grid(True, which='minor')
   ax.xaxis.grid(True, alpha=0.2)
-  #pyplot.ylabel('%',rotation=0)
+  #plt.ylabel('%',rotation=0)
   ax.set_xlabel('')
   
   myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
@@ -285,13 +317,15 @@ def plot_temp_48_all_rooms(data_orig, make_plot = True):
   ax.yaxis.tick_right()
   ax.yaxis.set_label_position("right")
   
-  #pyplot.show()
+  #plt.show()
   
-  pyplot.savefig('/var/www/html/kotibobot/' + filename)
+  #plt.savefig('/var/www/html/kotibobot/' + filename)
+  a.save(fig,'/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link(plotname, filename)
 
-def plot_temp_48(room, data_orig, make_plot = True):
+def plot_temp_48(room, data_orig, a, make_plot = True):
+  plt.ioff()
   filename = room + '_target_temp.svg'
   plotname = "Temperature, 48h"
   if not make_plot:
@@ -324,34 +358,37 @@ def plot_temp_48(room, data_orig, make_plot = True):
   for sensor in mi_in_rooms[room]:
     temps.append(sensor + " temp")
   
-  ax = data.plot(x="time",y=(temps), alpha=0.7, color='r')
-  ax = data.plot(x="time",y=(targets), alpha=0.7,linestyle='dashed', ax=ax)
-  pyplot.ylabel('°C   ',rotation=0)
+  fig, ax = plt.subplots()
+  data.plot(x="time",y=(temps), alpha=0.7, color='r', ax=ax)
+  data.plot(x="time",y=(targets), alpha=0.7,linestyle='dashed', ax=ax)
+  plt.ylabel('°C   ',rotation=0)
   
-  lim = list(pyplot.ylim())
+  lim = list(plt.ylim())
   lim[0] = math.floor(lim[0])
   lim[1] = math.ceil(lim[1])
   
   data.plot(x="time",y=(valves),secondary_y=True,linestyle=':', ax=ax, alpha=0.7) # ax=ax laittaa samaan kuvaan
-  pyplot.ylim([-2, 102])
+  plt.ylim([-2, 102])
   ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
   
   ax.yaxis.grid(True, which='major', alpha = 0.2)
   ax.yaxis.grid(True, which='minor')
   ax.xaxis.grid(True, alpha=0.2)
-  pyplot.ylabel('%',rotation=0)
+  plt.ylabel('%',rotation=0)
   ax.set_xlabel('')
   
   myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
   ax.xaxis.set_major_formatter(myFmt)
   
-  #pyplot.show()
+  #plt.show()
   
-  pyplot.savefig('/var/www/html/kotibobot/' + filename)
+  #plt.savefig('/var/www/html/kotibobot/' + filename)
+  a.save(fig,'/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link(plotname, filename)
 
-def plot_temp_offset(room, data_orig, make_plot = True):
+def plot_temp_offset(room, data_orig, a, make_plot = True):
+  plt.ioff()
   filename = room + '_offset.svg'
   plotname = "Error, 48h"
   if not make_plot:
@@ -393,18 +430,19 @@ def plot_temp_offset(room, data_orig, make_plot = True):
   data['error'] = data['temp'].subtract(data['target'])
   #offsets.append('error')
   
-  ax = data.plot(x="time",y='error', alpha=0.7, color = 'm')
+  fig, ax = plt.subplots()
+  data.plot(x="time",y='error', alpha=0.7, color = 'm', ax=ax)
   data.plot(x="time",y=offsets, linestyle='dashed', alpha=0.7, ax=ax)
-  pyplot.ylabel('°C   ',rotation=0)
+  plt.ylabel('°C   ',rotation=0)
   
-  lim = list(pyplot.ylim())
+  lim = list(plt.ylim())
   lim[0] = math.floor(lim[0])
   lim[1] = math.ceil(lim[1])
   
   data.plot(x="time",y=valves, secondary_y=True,ax=ax,linestyle=':', alpha=0.7) # ax=ax laittaa samaan kuvaan
-  pyplot.ylabel('%',rotation=0)
+  plt.ylabel('%',rotation=0)
   ax.set_xlabel('')
-  pyplot.ylim([-2, 102])
+  plt.ylim([-2, 102])
   ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
   ax.set_yticks([0.0001], minor=True)
   
@@ -415,14 +453,16 @@ def plot_temp_offset(room, data_orig, make_plot = True):
   myFmt = mdates.DateFormatter('%-d.%-m. - %-H:%M')
   ax.xaxis.set_major_formatter(myFmt)
   
-  #pyplot.show()
+  #plt.show()
   
-  pyplot.savefig('/var/www/html/kotibobot/' + filename)
+  #plt.savefig('/var/www/html/kotibobot/' + filename)
+  a.save(fig,'/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link(plotname, filename)
 
 
-def plot_temp_days(room, data_orig, make_plot = True):
+def plot_temp_days(room, data_orig, a, make_plot = True):
+  plt.ioff()
   filename = room + '_temp.svg'
   plotname = "Temperature, past three days"
   if not make_plot:
@@ -458,13 +498,14 @@ def plot_temp_days(room, data_orig, make_plot = True):
     temps.append(sensor + " temp")
   temp = temps[0] # mean could be calculated, if many sensors
   
-  ax = data2.plot(x="time",y=temp,color='r', alpha=0.8)
+  fig, ax = plt.subplots()
+  data2.plot(x="time",y=temp,color='r', alpha=0.8, ax=ax)
   data1.plot(x="time",y=temp,linestyle='dashed',ax=ax,color='r', alpha=0.7) # ax=ax laittaa samaan kuvaan
   data0.plot(x="time",y=temp,linestyle=':',ax=ax,color='r', alpha=0.6) # ax=ax laittaa samaan kuvaan
-  pyplot.ylabel('    °C',rotation=0)
+  plt.ylabel('    °C',rotation=0)
   ax.set_xlabel('')
   
-  lim = list(pyplot.ylim())
+  lim = list(plt.ylim())
   lim[0] = math.floor(lim[0])
   lim[1] = math.ceil(lim[1])
   ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
@@ -476,12 +517,14 @@ def plot_temp_days(room, data_orig, make_plot = True):
   ax.yaxis.tick_right()
   ax.yaxis.set_label_position("right")
   
-  #pyplot.show()
-  pyplot.savefig('/var/www/html/kotibobot/' + filename)
+  #plt.show()
+  #plt.savefig('/var/www/html/kotibobot/' + filename)
+  a.save(fig,'/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link(plotname, filename)
   
-def plot_humidity_days(room, data_orig, make_plot = True):
+def plot_humidity_days(room, data_orig, a, make_plot = True):
+  plt.ioff()
   filename = room + '_humidity.svg'
   plotname = "Humidity, past three days"
   if not make_plot:
@@ -517,9 +560,10 @@ def plot_humidity_days(room, data_orig, make_plot = True):
     humidities.append(sensor + " humidity")
   humidity = humidities[0] # mean could be calculated, if many sensors
   
-  ax = data2.plot(x="time",y=humidity,color='b',alpha=0.8)
-  pyplot.ylim([-2, 102])
-  pyplot.ylabel(' %',rotation=0)
+  fig, ax = plt.subplots()
+  data2.plot(x="time",y=humidity,color='b',alpha=0.8, ax=ax)
+  plt.ylim([-2, 102])
+  plt.ylabel(' %',rotation=0)
   
   data1.plot(x="time",y=humidity,linestyle='dashed',ax=ax,color='b',alpha=0.7) # ax=ax laittaa samaan kuvaan
   data0.plot(x="time",y=humidity,linestyle=':',ax=ax,color='b',alpha=0.6) # ax=ax laittaa samaan kuvaan
@@ -532,9 +576,10 @@ def plot_humidity_days(room, data_orig, make_plot = True):
   ax.yaxis.tick_right()
   ax.yaxis.set_label_position("right")
   
-  #pyplot.show()
-  #pyplot.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
-  pyplot.savefig('/var/www/html/kotibobot/' + filename)
+  #plt.show()
+  #plt.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
+  #plt.savefig('/var/www/html/kotibobot/' + filename)
+  a.save(fig,'/var/www/html/kotibobot/' + filename)
   #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link(plotname, filename)
 
@@ -577,16 +622,24 @@ def plot_parallel_task_length():
     
 def plot_main_function():
   data_orig = load_ts_data()
-  plot_parallel()
+  #plot_parallel()
+  
+  t = time.time()
+  
+  a = AsyncPlotter()
   res = ["Kaikki huoneet"] # in html
-  res.append(plot_temp_48_all_rooms(data_orig))
+  res.append(plot_temp_48_all_rooms(data_orig,a))
   for room in rooms:
     res.append("\n" + room.capitalize())
-    res.append(plot_temp_48(room, data_orig))
-    res.append(plot_temp_offset(room, data_orig))
-    res.append(plot_temp_days(room, data_orig))
-    res.append(plot_humidity_days(room, data_orig))
-    plt.close('all')
+    res.append(plot_temp_48(room, data_orig,a))
+    res.append(plot_temp_offset(room, data_orig,a))
+    res.append(plot_temp_days(room, data_orig,a))
+    res.append(plot_humidity_days(room, data_orig,a))
+  a.join()
+  plt.close('all')
+  
+  print('Total plotting time: ' + str(time.time() - t))
+  
   return "\n".join(res)
 
 def read_latest_data():
