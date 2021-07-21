@@ -4,6 +4,7 @@ import smtplib
 import kotibobot_functions as kotibobot
 import json
 import time
+from datetime import date
 
 
 
@@ -63,6 +64,7 @@ if not flag:
       break
 
 if flag:
-  send_email('Jotkin paristot ovat lopussa.')
+  send_email('Jotkin paristot ovat lopussa.') # low battery message
 else:
-  send_email('Kaikki on hyvin.')
+  if date.today().weekday() == 0: # only on mondays
+    send_email('Kaikki on hyvin.') # ok message
