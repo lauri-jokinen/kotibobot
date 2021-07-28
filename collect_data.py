@@ -29,6 +29,7 @@ def collect_and_save():
       new_data[sensor + " humidity"] = mi_reading['humidity']
   
   new_data["outside temp"] = kotibobot.outside_temp()
+  new_data["outside humidity"] = kotibobot.outside_humidity()
   
   new_df = pd.json_normalize(new_data)
   

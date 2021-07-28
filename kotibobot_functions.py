@@ -271,15 +271,8 @@ def plot_temp_48_all_rooms(data_orig, a, make_plot = True):
   plotname = "Temperature, 48h all rooms"
   if not make_plot:
     return html_link(plotname, filename)
-  #data = load_ts_data()
-  data = data_orig
-  #data = pd.DataFrame(series)
-  #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
   
-  #t_start = "2021-05-08T16:15"
-  #t_end   = "2021-05-10T17:10"
-  #data = data[data['time'] > pd.to_datetime(t_start, format="%Y-%m-%dT%H:%M")]
-  #data = data[data['time'] < pd.to_datetime(t_end, format="%Y-%m-%dT%H:%M")]
+  data = data_orig
   
   t_start = datetime.now() - timedelta(hours = 48)
   t_end = datetime.now()
@@ -287,13 +280,27 @@ def plot_temp_48_all_rooms(data_orig, a, make_plot = True):
   data = data[data['time'] > t_start]
   data = data[data['time'] < t_end]
   
+  # min and max temps are used to filter
+  # too low and too high outside temp -values
+  max_room_temp = -float('inf')
+  min_room_temp =  float('inf')
+  
   temps = []
   for room in rooms:
     for sensor in mi_in_rooms[room]:
       temps.append(sensor + " temp")
+      max_room_temp = max(max_room_temp, data[sensor + " temp"].max())
+      min_room_temp = min(min_room_temp, data[sensor + " temp"].min())
+      
+  max_room_temp = max_room_temp + 5
+  min_room_temp = min_room_temp - 5
   
+  # we filter too low and
+  # too high outside temp -values
+  data['outside temp'] = data['outside temp'].where(data['outside temp'] < max_room_temp, float('nan'))
+  data['outside temp'] = data['outside temp'].where(data['outside temp'] > min_room_temp, float('nan'))
   
-  fig, ax = plt.subplots()
+  fig, ax = plt.subplots(1,1,figsize=(11,9))
   #ax = data.plot(x="time",y=(temps), alpha=0.7)
   data.plot(x="time",y=(temps), alpha=0.7, ax=ax)
   data.plot(x="time",y="outside temp", alpha=0.7, ax=ax, linestyle='dashed')
@@ -303,13 +310,11 @@ def plot_temp_48_all_rooms(data_orig, a, make_plot = True):
   lim[0] = math.floor(lim[0])
   lim[1] = math.ceil(lim[1])
   
-  #plt.ylim([-2, 102])
   ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
   
   ax.yaxis.grid(True, which='major', alpha = 0.2)
   ax.yaxis.grid(True, which='minor')
   ax.xaxis.grid(True, alpha=0.2)
-  #plt.ylabel('%',rotation=0)
   ax.set_xlabel('')
   
   myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
@@ -322,7 +327,45 @@ def plot_temp_48_all_rooms(data_orig, a, make_plot = True):
   
   #plt.savefig('/var/www/html/kotibobot/' + filename)
   a.save(fig,'/var/www/html/kotibobot/' + filename)
-  #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
+  return html_link(plotname, filename)
+
+def plot_humidity_48_all_rooms(data_orig, a, make_plot = True):
+  plt.ioff()
+  filename = 'humidity_allrooms.svg'
+  plotname = "Humidity, 48h all rooms"
+  if not make_plot:
+    return html_link(plotname, filename)
+  data = data_orig
+  
+  t_start = datetime.now() - timedelta(hours = 48)
+  t_end = datetime.now()
+  
+  data = data[data['time'] > t_start]
+  data = data[data['time'] < t_end]
+  
+  humidities = []
+  for sensor in mis:
+    humidities.append(mac_to_name[sensor] + " humidity")
+  
+  fig, ax = plt.subplots(1,1,figsize=(11,9))
+  data.plot(x="time",y=(humidities), ax=ax, alpha=0.7) # ax=ax laittaa samaan kuvaan
+  data.plot(x="time",y="outside humidity", ax=ax, alpha=0.7, linestyle='dashed')
+  
+  plt.ylim([-2, 102])
+  
+  plt.ylabel('%',rotation=0)
+  ax.set_xlabel('')
+  ax.xaxis.grid(True, alpha=0.2)
+  ax.yaxis.grid(True, alpha=0.2)
+  
+  myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
+  plt.xticks(rotation=0, ha='center')
+  ax.xaxis.set_major_formatter(myFmt)
+  ax.yaxis.tick_right()
+  ax.yaxis.set_label_position("right")
+  
+  #plt.savefig('/var/www/html/kotibobot/' + filename)
+  a.save(fig,'/var/www/html/kotibobot/' + filename)
   return html_link(plotname, filename)
 
 def plot_temp_48(room, data_orig, a, make_plot = True):
@@ -331,15 +374,7 @@ def plot_temp_48(room, data_orig, a, make_plot = True):
   plotname = "Temperature, 48h"
   if not make_plot:
     return html_link(plotname, filename)
-  #data = load_ts_data()
   data = data_orig
-  #data = pd.DataFrame(series)
-  #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
-  
-  #t_start = "2021-05-08T16:15"
-  #t_end   = "2021-05-10T17:10"
-  #data = data[data['time'] > pd.to_datetime(t_start, format="%Y-%m-%dT%H:%M")]
-  #data = data[data['time'] < pd.to_datetime(t_end, format="%Y-%m-%dT%H:%M")]
   
   t_start = datetime.now() - timedelta(hours = 48)
   t_end = datetime.now()
@@ -359,34 +394,38 @@ def plot_temp_48(room, data_orig, a, make_plot = True):
   for sensor in mi_in_rooms[room]:
     temps.append(sensor + " temp")
   
-  fig, ax = plt.subplots()
-  data.plot(x="time",y=(temps), alpha=0.7, color='r', ax=ax)
-  data.plot(x="time",y=(targets), alpha=0.7,linestyle='dashed', ax=ax)
+  fig, ax1 = plt.subplots(1,1,figsize=(11,9))
+  
+  data.plot(x="time",y=(temps), alpha=0.7, color='r', ax=ax1)
+  data.plot(x="time",y=(targets), alpha=0.7,linestyle='dashed', ax=ax1)
   plt.ylabel('°C   ',rotation=0)
   
   lim = list(plt.ylim())
   lim[0] = math.floor(lim[0])
   lim[1] = math.ceil(lim[1])
   
-  data.plot(x="time",y=(valves),secondary_y=True,linestyle=':', ax=ax, alpha=0.7) # ax=ax laittaa samaan kuvaan
-  plt.ylim([-2, 102])
-  ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
+  plt.xticks(rotation=0, ha='center')
   
-  ax.yaxis.grid(True, which='major', alpha = 0.2)
-  ax.yaxis.grid(True, which='minor')
-  ax.xaxis.grid(True, alpha=0.2)
+  ax2 = ax1.twinx()
+  data.plot(x="time",y=(valves),linestyle=':', ax=ax2, alpha=0.7) # ax=ax laittaa samaan kuvaan secondary_y=True,
+  #plt.ylim([-2, 102])
+  #ax1.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
+  
+  ax1.yaxis.grid(True, which='major', alpha = 0.2)
+  ax1.yaxis.grid(True, which='minor')
+  ax1.xaxis.grid(True, alpha=0.2)
   plt.ylabel('%',rotation=0)
-  ax.set_xlabel('')
+  ax1.set_xlabel('')
   
   myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
-  plt.xticks(rotation=0, ha='center')
-  ax.xaxis.set_major_formatter(myFmt)
-  
+  #plt.xticks(rotation=0, ha='center', ax=ax1) ###########
+  #ax1.set_xticklabels(rotation=0, ha='center', ax=ax1) ###########
+  ax1.xaxis.set_major_formatter(myFmt)
   #plt.show()
+  
   
   #plt.savefig('/var/www/html/kotibobot/' + filename)
   a.save(fig,'/var/www/html/kotibobot/' + filename)
-  #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link(plotname, filename)
 
 def plot_temp_offset(room, data_orig, a, make_plot = True):
@@ -395,15 +434,7 @@ def plot_temp_offset(room, data_orig, a, make_plot = True):
   plotname = "Error, 48h"
   if not make_plot:
     return html_link(plotname, filename)
-  #data = load_ts_data()
   data = data_orig
-  #data = pd.DataFrame(series)
-  #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
-  
-  #t_start = "2021-05-08T16:15"
-  #t_end   = "2021-05-10T17:10"
-  #data = data[data['time'] > pd.to_datetime(t_start, format="%Y-%m-%dT%H:%M")]
-  #data = data[data['time'] < pd.to_datetime(t_end, format="%Y-%m-%dT%H:%M")]
   
   t_start = datetime.now() - timedelta(hours = 48)
   t_end = datetime.now()
@@ -432,35 +463,37 @@ def plot_temp_offset(room, data_orig, a, make_plot = True):
   data['error'] = data['temp'].subtract(data['target'])
   #offsets.append('error')
   
-  fig, ax = plt.subplots()
-  data.plot(x="time",y='error', alpha=0.7, color = 'm', ax=ax)
-  data.plot(x="time",y=offsets, linestyle='dashed', alpha=0.7, ax=ax)
+  fig, ax1 = plt.subplots(1,1,figsize=(11,9))
+  data.plot(x="time",y='error', alpha=0.7, color = 'm', ax=ax1)
+  data.plot(x="time",y=offsets, linestyle='dashed', alpha=0.7, ax=ax1)
   plt.ylabel('°C   ',rotation=0)
   
   lim = list(plt.ylim())
   lim[0] = math.floor(lim[0])
   lim[1] = math.ceil(lim[1])
+  plt.xticks(rotation=0, ha='center')
   
-  data.plot(x="time",y=valves, secondary_y=True,ax=ax,linestyle=':', alpha=0.7) # ax=ax laittaa samaan kuvaan
+  ax2 = ax1.twinx()
+  
+  data.plot(x="time",y=valves,ax=ax2,linestyle=':', alpha=0.7) # ax=ax laittaa samaan kuvaan
   plt.ylabel('%',rotation=0)
-  ax.set_xlabel('')
+  ax1.set_xlabel('')
   plt.ylim([-2, 102])
-  ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
-  ax.set_yticks([0.0001], minor=True)
+  ax1.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
+  ax1.set_yticks([0.0001], minor=True)
   
-  ax.yaxis.grid(True, which='major', alpha = 0.2)
-  ax.yaxis.grid(True, which='minor')
-  ax.xaxis.grid(True, alpha=0.2)
+  ax1.yaxis.grid(True, which='major', alpha = 0.2)
+  ax1.yaxis.grid(True, which='minor')
+  ax1.xaxis.grid(True, alpha=0.2)
   
   myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
-  plt.xticks(rotation=0, ha='center')
-  ax.xaxis.set_major_formatter(myFmt)
+  
+  ax1.xaxis.set_major_formatter(myFmt)
   
   #plt.show()
   
   #plt.savefig('/var/www/html/kotibobot/' + filename)
   a.save(fig,'/var/www/html/kotibobot/' + filename)
-  #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link(plotname, filename)
 
 
@@ -470,15 +503,7 @@ def plot_temp_days(room, data_orig, a, make_plot = True):
   plotname = "Temperature, past three days"
   if not make_plot:
     return html_link(plotname, filename)
-  #data = load_ts_data()
   data = data_orig
-  #data = pd.DataFrame(series)
-  #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
-  
-  #t_start = "2021-05-08T16:15"
-  #t_end   = "2021-05-10T17:10"
-  #data = data[data['time'] > pd.to_datetime(t_start, format="%Y-%m-%dT%H:%M")]
-  #data = data[data['time'] < pd.to_datetime(t_end, format="%Y-%m-%dT%H:%M")]
   
   t2 = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
   t3 = t2 + timedelta(hours = 24)
@@ -501,7 +526,7 @@ def plot_temp_days(room, data_orig, a, make_plot = True):
     temps.append(sensor + " temp")
   temp = temps[0] # mean could be calculated, if many sensors
   
-  fig, ax = plt.subplots()
+  fig, ax = plt.subplots(1,1,figsize=(11,9))
   data2.plot(x="time",y=temp,color='r', alpha=0.8, ax=ax)
   data1.plot(x="time",y=temp,linestyle='dashed',ax=ax,color='r', alpha=0.7) # ax=ax laittaa samaan kuvaan
   data0.plot(x="time",y=temp,linestyle=':',ax=ax,color='r', alpha=0.6) # ax=ax laittaa samaan kuvaan
@@ -519,6 +544,7 @@ def plot_temp_days(room, data_orig, a, make_plot = True):
   ax.xaxis.set_major_formatter(myFmt)
   ax.yaxis.tick_right()
   ax.yaxis.set_label_position("right")
+  plt.xticks(rotation=0, ha='center')
   
   #plt.show()
   #plt.savefig('/var/www/html/kotibobot/' + filename)
@@ -532,15 +558,7 @@ def plot_humidity_days(room, data_orig, a, make_plot = True):
   plotname = "Humidity, past three days"
   if not make_plot:
     return html_link(plotname, filename)
-  #data = load_ts_data()
   data = data_orig
-  #data = pd.DataFrame(series)
-  #data['time'] = pd.to_datetime(data['time'], format="%Y-%m-%dT%H:%M")
-  
-  #t_start = "2021-05-08T16:15"
-  #t_end   = "2021-05-10T17:10"
-  #data = data[data['time'] > pd.to_datetime(t_start, format="%Y-%m-%dT%H:%M")]
-  #data = data[data['time'] < pd.to_datetime(t_end, format="%Y-%m-%dT%H:%M")]
   
   t2 = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
   t3 = t2 + timedelta(hours = 24)
@@ -563,7 +581,7 @@ def plot_humidity_days(room, data_orig, a, make_plot = True):
     humidities.append(sensor + " humidity")
   humidity = humidities[0] # mean could be calculated, if many sensors
   
-  fig, ax = plt.subplots()
+  fig, ax = plt.subplots(1,1,figsize=(11,9))
   data2.plot(x="time",y=humidity,color='b',alpha=0.8, ax=ax)
   plt.ylim([-2, 102])
   plt.ylabel(' %',rotation=0)
@@ -578,12 +596,11 @@ def plot_humidity_days(room, data_orig, a, make_plot = True):
   ax.yaxis.grid(True, alpha=0.2)
   ax.yaxis.tick_right()
   ax.yaxis.set_label_position("right")
+  plt.xticks(rotation=0, ha='center')
   
   #plt.show()
-  #plt.savefig('/home/lowpaw/Downloads/kotibobot/' + filename)
   #plt.savefig('/var/www/html/kotibobot/' + filename)
   a.save(fig,'/var/www/html/kotibobot/' + filename)
-  #subprocess.run(['cp', '/home/lowpaw/Downloads/kotibobot/' + filename, '/var/www/html/kotibobot/'])
   return html_link(plotname, filename)
 
 #plot_ts(['työkkäri']) # , '2021-05-08T16:15', '2021-05-10T17:10'
@@ -631,6 +648,7 @@ def plot_main_function(draw_plots = True):
   a = AsyncPlotter()
   res = ["Kaikki huoneet"] # in html
   res.append(plot_temp_48_all_rooms(data_orig,a,draw_plots))
+  res.append(plot_humidity_48_all_rooms(data_orig,a,draw_plots))
   for room in rooms:
     res.append("\n" + room.capitalize())
     res.append(plot_temp_48(room, data_orig,a,draw_plots))
@@ -703,3 +721,9 @@ def command_queue_wipe():
 def outside_temp():
   weather = fmi.weather_by_coordinates(60.19078966723265, 24.832829160598983)
   return weather.data.temperature.value
+  
+def outside_humidity():
+  weather = fmi.weather_by_coordinates(60.19078966723265, 24.832829160598983)
+  return weather.data.humidity.value
+  
+plot_main_function()
