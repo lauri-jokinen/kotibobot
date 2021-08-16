@@ -1,12 +1,12 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
-import kotibobot_functions as kotibobot
 import json
 import time
 from datetime import date
 
-
+import kotibobot
+import house
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
   koodit = json.load(json_file)
@@ -50,15 +50,15 @@ print('Ajetaan sys_check-skriptiä...')
 time.sleep(55) # 50 normisti
 flag = False
 
-for mi in kotibobot.mis:
-  res = kotibobot.mi_to_json(mi)
+for mi in house.mis:
+  res = kotibobot.mi.to_json(mi)
   if 'battery' in res and res['battery'] < 10:
     flag = True
     break
 
 if not flag:
-  for eq3 in kotibobot.eq3s:
-    res = kotibobot.eq3_command(eq3 + ' sync')
+  for eq3 in house.eq3s:
+    res = kotibobot.eq3.command(eq3 + ' sync')
     if 'batt' in res:
       flag = True
       break

@@ -1,7 +1,9 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import json
-import kotibobot_functions as kotibobot
 from datetime import datetime
+
+import kotibobot
+import common_functions
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
@@ -61,7 +63,7 @@ def direct_eq3_command(update, context):
   waiting_message = update.message.reply_text("Yhdistetään laitteisiin...")
   str = update.message.text
   str = " ".join(str.split(" ")[1:]) # Removes /-command
-  res_array = kotibobot.eq3_command_human(str)
+  res_array = kotibobot.eq3.command_human(str)
   for res in res_array:
     res = showifemptystring(res)
     if len(res) > 2500:
@@ -87,10 +89,10 @@ def room_command(update,context,room):
   str = update.message.text
   str = " ".join(str.split(" ")[1:]) # Removes the /-command
   if str == "":
-    res_array = kotibobot.eq3_command_human(room + ' status')
-    res_array = res_array + kotibobot.mi_read_human(room)
+    res_array = kotibobot.eq3.command_human(room + ' status')
+    res_array = res_array + kotibobot.mi.read_human(room)
   else:
-    res_array = kotibobot.eq3_command_human(room + ' ' + str)
+    res_array = kotibobot.eq3.command_human(room + ' ' + str)
   for res in res_array:
     res = showifemptystring(res)
     if len(res) > 2500:
@@ -103,7 +105,7 @@ def plot_data(update,context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
-  update.message.reply_text(kotibobot.plot_main_function(False), parse_mode='HTML')
+  update.message.reply_text(kotibobot.plotting.main_function(False), parse_mode='HTML')
 
 def mi_status(update,context):
   if not authorized(update, context):
@@ -112,7 +114,7 @@ def mi_status(update,context):
   waiting_message = update.message.reply_text("Yhdistetään laitteeseen...")
   str = update.message.text
   str = " ".join(str.split(" ")[1:]) # Removes the /-command
-  res_array = kotibobot.mi_read_human(str)
+  res_array = kotibobot.mi.read_human(str)
   if len(res_array) > 20:
     res_array = res_array[0:18]
   for res in res_array:
@@ -127,37 +129,37 @@ def data_command(update, context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
-  update.message.reply_text(kotibobot.read_latest_data())
+  update.message.reply_text(kotibobot.plotting.latest_data())
 
 def restart_bluetooth(update, context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
-  print(kotibobot.restart_bluetooth())
+  print(common_functions.restart_bluetooth())
 
 def command_queue_append(update, context):
   str = update.message.text
   str = " ".join(str.split(" ")[1:]) # Removes the /-command
   waiting_message = update.message.reply_text('Kirjoitetaan komentoa muistiin...')
-  kotibobot.command_queue_append(str)
+  kotibobot.command_queue.append(str)
   update.message.reply_text('Kirjoittaminen onnistui!')
   waiting_message.delete()
 
 def command_queue_print(update, context):
-  update.message.reply_text(kotibobot.command_queue_print())
+  update.message.reply_text(kotibobot.command_queue.print_queue())
 
 def command_queue_wipe(update, context):
-  update.message.reply_text(kotibobot.command_queue_wipe())
+  update.message.reply_text(kotibobot.command_queue.wipe())
 
 def command_queue_do(update, context):
   waiting_message = update.message.reply_text('Suoritetaan komentojonoa...')
-  kotibobot.command_queue_do()
+  kotibobot.command_queue.do()
   update.message.reply_text('Tehty! Jono on nyt seuraava:')
   command_queue_print(update, context)
   waiting_message.delete()
 
 def outside_temp(update, context):
-  update.message.reply_text(kotibobot.outside_temp())
+  update.message.reply_text(kotibobot.weather.temp())
 
 def main():
   # Create Updater object and attach dispatcher to it
