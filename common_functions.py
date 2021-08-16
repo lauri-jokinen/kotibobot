@@ -10,7 +10,7 @@ def restart_bluetooth():
     res_str = "ERROR: Bluetooth could not be restarted"
   return res_str
 
-def remove_extra_spaces(str):
+def remove_extra_spaces(str): # and remove tabs!
   arr = str.split(" ")
   i = 0
   while i < len(arr):
@@ -18,4 +18,5 @@ def remove_extra_spaces(str):
       arr.pop(i)
     else:
       i = i+1
-  return " ".join(arr)
+  return "".join((" ".join(arr)).split("\t"))
+
