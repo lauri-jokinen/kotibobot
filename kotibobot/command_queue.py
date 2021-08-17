@@ -5,8 +5,7 @@ from house import *
 from common_functions import *
 import kotibobot.eq3
 
-import pytz
-utc=pytz.UTC
+from kotibobot.plotting import load_ts_data as load_ts_data
 
 # Command queue for eq3 devices, in case connection is lost for an extensive amount of time.
 
@@ -33,7 +32,8 @@ def do():
     if "@" in queue[i]: # sceduled commands
       due_time_str = queue[i].split("@")[1].split(" ")[0]
       due_time = dateutil.parser.isoparse(due_time_str)
-      if datetime.now() > due_time:
+      # we take into account the cycle time of the loop in collect_data.py
+      if datetime.now() + median_timedelta() > due_time:
         queue[i] = " ".join(queue[i].split(" ")[1:]) # conversion to non-sceduled command
         rewrite(queue)
       else:
@@ -57,3 +57,19 @@ def wipe():
   commands = '\n'.join(read())
   rewrite('')
   return 'Komennot pyyhitty! Ne olivat:\n\n' + commands
+  
+def remove_append_vacation(selected_rooms):
+  queue = read()
+  for room in selected_rooms:
+    i = 0
+    while i < len(queue):
+      if room in queue[i] and "vacation" in queue[i]:
+        queue.pop(i)
+        rewrite(queue)
+      else:
+        i = i+1
+
+def median_timedelta():
+  # median cycle time for the last five measurements
+  df = load_ts_data()
+  return ((df.iloc[-5:])['time']).diff().median()
