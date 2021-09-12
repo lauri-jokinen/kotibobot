@@ -41,10 +41,14 @@ def do():
     else: # non-sceduled commands
       res = " ".join(kotibobot.eq3.command_human(queue[i]))
       if not ("ERROR" in res or "failed" in res):
+        # read, modify and rewrite because of time consumed by the eq3 command
+        # new commands may have been appended during this time
+        queue = read()
         queue.pop(i)
         rewrite(queue)
       else:
         i = i+1
+  rewrite(queue)
 
 def print_queue():
   queue = '\n'.join(read())
@@ -65,9 +69,9 @@ def remove_append_vacation(selected_rooms):
     while i < len(queue):
       if room in queue[i] and "vacation" in queue[i]:
         queue.pop(i)
-        rewrite(queue)
       else:
         i = i+1
+  rewrite(queue)
 
 def median_timedelta():
   # median cycle time for the last five measurements

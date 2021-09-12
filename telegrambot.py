@@ -1,6 +1,7 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import json
 from datetime import datetime
+from wakeonlan import send_magic_packet
 
 import kotibobot
 import common_functions
@@ -158,6 +159,13 @@ def command_queue_do(update, context):
   command_queue_print(update, context)
   waiting_message.delete()
 
+def wake_on_lan(update, context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
+  send_magic_packet(koodit['pöytäkone-mac'])
+  update.message.reply_text('Tehty!')
+
 def outside_temp(update, context):
   update.message.reply_text(kotibobot.weather.temp())
 
@@ -181,6 +189,7 @@ def main():
   command_queue_print_handler = CommandHandler('printqueue', command_queue_print)
   command_queue_wipe_handler = CommandHandler('wipequeue', command_queue_wipe)
   command_queue_do_handler = CommandHandler('runqueue', command_queue_do)
+  wake_on_lan_handler = CommandHandler('wakecomputer', wake_on_lan)
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
@@ -195,6 +204,7 @@ def main():
   dispatcher.add_handler(command_queue_print_handler)
   dispatcher.add_handler(command_queue_wipe_handler)
   dispatcher.add_handler(command_queue_do_handler)
+  dispatcher.add_handler(wake_on_lan_handler)
 
   # Start the bot
   updater.start_polling()
