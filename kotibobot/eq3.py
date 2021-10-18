@@ -64,6 +64,21 @@ def command_human(s):
         res.append("Huonetta '" + room + "' ei ole. Valitse jokin näistä: " + ", ".join(rooms) + ". Käyn muut huoneet läpi.")
   return res
 
+def store_offset(mac, offset):
+  with open("/home/lowpaw/Downloads/kotibobot/eq3_offset.json") as json_file:
+    offset_json = json.load(json_file)
+  offset_json[mac] = offset
+  with open("/home/lowpaw/Downloads/kotibobot/eq3_offset.json", 'w') as json_file:
+    json.dump(offset_json, json_file)
+
+def read_offset(mac):
+  with open("/home/lowpaw/Downloads/kotibobot/eq3_offset.json") as json_file:
+    offset_json = json.load(json_file)
+  if mac in offset_json:
+    return offset_json[mac]
+  else:
+    return 0.0
+
 def to_json(mac):
   res = command(mac + ' sync')
   res_json = json.loads("{}")
@@ -74,13 +89,16 @@ def to_json(mac):
     valve_reading = (res.split("Valve:")[1]).split("%")[0]
     valve_reading = float(valve_reading.split(" ")[-1])
     res_json['valve'] = valve_reading
-    offset_reading = (res.split("Offset temperature:")[1]).split("°C")[0]
-    offset_reading = float(offset_reading.split(" ")[-1])
-    res_json['offset'] = offset_reading
+    #offset_reading = (res.split("Offset temperature:")[1]).split("°C")[0]
+    #offset_reading = float(offset_reading.split(" ")[-1])
+    #res_json['offset'] = offset_reading
+    res_json['offset'] = read_offset(mac)
+    res_json['automode'] = int('auto' in res)
   except:
     res_json['target'] = float('nan')
     res_json['valve'] = float('nan')
     res_json['offset'] = float('nan')
+    res_json['automode'] = -1
   return res_json
 
 # command could be e.g. 'mac timer mon 22.5'

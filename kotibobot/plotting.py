@@ -52,7 +52,7 @@ def load_ts_data():
   
   try:
     last_month = pd.read_pickle(last_month_file_name)
-    df = df.append(last_month, sort=False, ignore_index=True)
+    df = last_month.append(df, sort=False, ignore_index=True)
   except:
     'nothing here'
   
@@ -331,6 +331,7 @@ def temp_offset(room, data_orig, a, make_plot = True):
   data['temp'] =   data[temps].mean(axis = 1,skipna = True)
   data['target'] = data[targets].mean(axis = 1,skipna = True)
   data['error'] = data['temp'].subtract(data['target'])
+  data['error'] = data['error'].subtract(data[offsets].mean(axis = 1,skipna = True))
   #offsets.append('error')
   
   fig, ax1 = plt.subplots(1,1,figsize=figure_size())

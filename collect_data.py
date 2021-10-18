@@ -7,6 +7,8 @@ import kotibobot
 from house import *
 from common_functions import *
 
+import kotibobot.thermostat_offset_controller
+
 def collect_and_save():
   new_data = json.loads("{}")
   
@@ -49,15 +51,18 @@ def collect_and_save():
   
   df.to_pickle(file_name)
 
-
 while True:
   collect_and_save()
   kotibobot.plotting.main_function()
-  time.sleep(60*5)
+  time.sleep(60*3)
   restart_bluetooth()
-  time.sleep(60*1)
+  time.sleep(60*2)
   try:
     kotibobot.command_queue.do()
   except:
     print('Queue run failed')
-  time.sleep(60*4)
+  time.sleep(60*2)
+  try:
+    kotibobot.thermostat_offset_controller.apply_control()
+  except:
+    print('Jotain meni pieleen kontrollissa, kun erroria pukkaa')
