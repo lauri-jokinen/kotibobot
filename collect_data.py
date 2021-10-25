@@ -52,6 +52,10 @@ def collect_and_save():
   df.to_pickle(file_name)
 
 while True:
+  try:
+    kotibobot.thermostat_offset_controller.apply_control()
+  except:
+    print('Jotain meni pieleen kontrollissa, kun erroria pukkaa')
   collect_and_save()
   kotibobot.plotting.main_function()
   time.sleep(60*3)
@@ -62,7 +66,3 @@ while True:
   except:
     print('Queue run failed')
   time.sleep(60*2)
-  try:
-    kotibobot.thermostat_offset_controller.apply_control()
-  except:
-    print('Jotain meni pieleen kontrollissa, kun erroria pukkaa')

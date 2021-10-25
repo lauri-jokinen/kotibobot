@@ -1,13 +1,13 @@
-import kotibobot.eq3
-import kotibobot.mi
-from house import *
 import numpy as np
 import scipy.stats
 import random
-
-from kotibobot.plotting import load_ts_data
 import math
+
+import kotibobot.eq3
+import kotibobot.mi
 import kotibobot.command_queue
+from house import *
+from kotibobot.plotting import load_ts_data
 
 def target_has_changed(eq3_name):
   data = load_ts_data()
@@ -123,19 +123,22 @@ def apply_control():
         
         # evaluate regression of recent mi data
         regression = error_slope(room)
+        print(regression)
         
         # tuning parameters
-        par_slope = 1e4 * 0.8
-        par_intercept = 0.5 * 0.6
+        par_slope = 1e4 * 0.16 * 0.8
+        par_intercept = 0.5 * 0.6 * 0.8
         
+        print('ind_interc: ' + str((-regression['intercept'] + target_temp) * par_intercept) + ' ind_slope: ' + str(-regression['slope'] * par_slope))
         indicator = -regression['slope'] * par_slope + (-regression['intercept'] + target_temp) * par_intercept
         
         # we give the control bigger effect, if the data collecting cycle is longer
         indicator = indicator * kotibobot.command_queue.median_timedelta().total_seconds() / 500
         
-        print('indicator: ' + str(indicator))
-        
-        delta = 0.5 * (random.random() < abs(indicator)) * indicator / abs(indicator)
+        if abs(indicator) < 1e-13:
+          continue
+        else:
+          delta = 0.5 * (random.random() < abs(indicator)) * indicator / abs(indicator)
         
         print('delta: ' + str(delta))
         
