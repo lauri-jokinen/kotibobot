@@ -2,15 +2,27 @@
 import json
 import subprocess # ubuntu bash
 import time
-#from datetime import datetime
+# import re # resplit
 
 from house import *
 from common_functions import *
 import kotibobot.append_vacation
 from kotibobot.command_queue import remove_append_vacation as remove_append_vacation
 
-def command(str):
-  s = ['/home/lowpaw/Downloads/eq3/eq3.exp', 'hci1'] + str.split(' ')
+'''
+def substitute_hard_offset(string):
+  s = re.split('\n|°C| |\t', string)
+  for i in range(len(s)):
+    try:
+      f = float(s[i])
+    except:
+      continue
+    s[i] = str(f - hard_offset)
+  return 
+'''
+
+def command(string):
+  s = ['/home/lowpaw/Downloads/eq3/eq3.exp', 'hci1'] + string.split(' ')
   res = subprocess.run(s, stdout=subprocess.PIPE)
   res_str = res.stdout.decode('utf-8')
   if "Connection failed" in res_str or "ERROR" in res_str:
@@ -26,11 +38,11 @@ def command(str):
   return res_str
 
 # Extra definitions to the basic commands
-def command_with_extras(str):
-  if in_allday_timer_format(str):
-    return command(str + ' 24:00')
+def command_with_extras(string):
+  if in_allday_timer_format(string):
+    return command(string + ' 24:00')
   else:
-    return command(str)
+    return command(string)
 
 # input: makkari offset -1
 #        työkkäri-makkari timer 12:00-13:00 17
@@ -64,18 +76,18 @@ def command_human(s):
         res.append("Huonetta '" + room + "' ei ole. Valitse jokin näistä: " + ", ".join(rooms) + ". Käyn muut huoneet läpi.")
   return res
 
-def store_offset(mac, offset):
+def store_attribute_database(mac, offset, attribute):
   with open("/home/lowpaw/Downloads/kotibobot/eq3_offset.json") as json_file:
-    offset_json = json.load(json_file)
-  offset_json[mac] = offset
+    json_data = json.load(json_file)
+  json_data[mac + attribute] = offset
   with open("/home/lowpaw/Downloads/kotibobot/eq3_offset.json", 'w') as json_file:
-    json.dump(offset_json, json_file)
+    json.dump(json_data, json_file)
 
-def read_offset(mac):
+def read_attribute_database(mac, attribute):
   with open("/home/lowpaw/Downloads/kotibobot/eq3_offset.json") as json_file:
-    offset_json = json.load(json_file)
-  if mac in offset_json:
-    return offset_json[mac]
+    json_data = json.load(json_file)
+  if (mac + attribute) in json_data:
+    return json_data[mac + attribute]
   else:
     return 0.0
 
@@ -92,12 +104,15 @@ def to_json(mac):
     #offset_reading = (res.split("Offset temperature:")[1]).split("°C")[0]
     #offset_reading = float(offset_reading.split(" ")[-1])
     #res_json['offset'] = offset_reading
-    res_json['offset'] = read_offset(mac)
+    res_json['offset'] = read_attribute_database(mac, 'offset')
+    res_json['integral'] = read_attribute_database(mac, 'integral')
     res_json['automode'] = int('auto' in res)
+    res_json['vacationmode'] = int('vacation' in res) # note lowercase 'vacation'
   except:
     res_json['target'] = float('nan')
     res_json['valve'] = float('nan')
-    res_json['offset'] = float('nan')
+    res_json['offset'] = read_attribute_database(mac, 'offset')
+    res_json['integral'] = read_attribute_database(mac, 'integral')
     res_json['automode'] = -1
   return res_json
 

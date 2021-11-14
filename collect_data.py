@@ -52,17 +52,16 @@ def collect_and_save():
   df.to_pickle(file_name)
 
 while True:
-  try:
-    kotibobot.thermostat_offset_controller.apply_control()
-  except:
-    print('Jotain meni pieleen kontrollissa, kun erroria pukkaa')
+  #try:
+  kotibobot.thermostat_offset_controller.apply_control()
+  #except:
+  #  print('Jotain meni pieleen kontrollissa, kun erroria pukkaa')
+  kotibobot.command_queue.do()
   collect_and_save()
+  kotibobot.command_queue.do()
   kotibobot.plotting.main_function()
-  time.sleep(60*3)
+  kotibobot.command_queue.do()
   restart_bluetooth()
-  time.sleep(60*2)
-  try:
+  for nothing in range(5):
+    time.sleep(60*1)
     kotibobot.command_queue.do()
-  except:
-    print('Queue run failed')
-  time.sleep(60*2)

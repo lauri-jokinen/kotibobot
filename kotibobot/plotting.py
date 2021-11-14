@@ -252,6 +252,8 @@ def temp_48(room, data_orig, a, make_plot = True):
   data = data[data['time'] > t_start]
   data = data[data['time'] < t_end]
   
+  #data['real_target']
+  
   valves = []
   for eq3 in eq3_in_rooms[room]:
     valves.append(eq3 + " valve")

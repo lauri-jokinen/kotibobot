@@ -37,7 +37,7 @@ def latest_temps(room):
   # three latest datapoints for each mi in the room
   data = load_ts_data()
   res = json.loads("{}")
-  pts = 3
+  pts = 4
   
   if "mi" in rooms[room]:
     for mi in rooms[room]["mi"]:
@@ -104,12 +104,13 @@ def apply_control():
         status = kotibobot.eq3.to_json(eq3)
         print(status)
         
-        # if status is nan, we won't do anything
+        # if status is nan, we won't do anything, but integral decay
         if math.isnan(status['target']):
+          kotibobot.eq3.store_attribute_database(eq3, status['integral']*0.95, 'integral')
           continue
         
         # if mode is not auto, we won't touch the temperatures
-        if status['automode']==1:
+        if status['automode']==1 and status['vacationmode']==0:
           target_temp = status['target'] + status['offset']
         else:
           continue
@@ -118,7 +119,8 @@ def apply_control():
         # here we set the mode to auto, and store offset 0.0
         if target_has_changed(mac_to_name[eq3]):
           kotibobot.command_queue.append(room + ' auto')
-          kotibobot.eq3.store_offset(eq3, 0.0)
+          kotibobot.eq3.store_attribute_database(eq3, hard_offset, 'offset') # hard_offset from house.py
+          kotibobot.eq3.store_attribute_database(eq3, 0.0, 'integral')
           continue
         
         # evaluate regression of recent mi data
@@ -126,11 +128,18 @@ def apply_control():
         print(regression)
         
         # tuning parameters
-        par_slope = 1e4 * 0.16 * 0.8
-        par_intercept = 0.5 * 0.6 * 0.8
+        par_slope = 990
+        par_intercept = 0.22275
+        par_integral = 5.625e-7 * 100 * 1.1
+        
+        integral = status['integral']*0.95 + kotibobot.command_queue.median_timedelta().total_seconds() * (- regression['intercept'] + target_temp)
+        kotibobot.eq3.store_attribute_database(eq3, integral, 'integral')
         
         print('ind_interc: ' + str((-regression['intercept'] + target_temp) * par_intercept) + ' ind_slope: ' + str(-regression['slope'] * par_slope))
-        indicator = -regression['slope'] * par_slope + (-regression['intercept'] + target_temp) * par_intercept
+        print('ind_integral: ' + str(integral* par_integral))
+        indicator = -regression['slope'] * par_slope
+        indicator = indicator + (-regression['intercept'] + target_temp) * par_intercept
+        indicator = indicator + integral*par_integral
         
         # we give the control bigger effect, if the data collecting cycle is longer
         indicator = indicator * kotibobot.command_queue.median_timedelta().total_seconds() / 500
@@ -146,14 +155,12 @@ def apply_control():
           continue
         
         new_offset = status['offset'] - delta
-        new_offset = min(3, max(-4, new_offset))
+        new_offset = min(6, max(-3, new_offset)) # positive number sets the coldest temp on eq3
         
         new_target = target_temp - new_offset
         
         print('new_offset: ' + str(new_offset) + ' new_target: ' + str(new_target))
         
         status = kotibobot.eq3.command(eq3 + ' temp ' + str(new_target))
-        if "Connection failed" in status or "ERROR" in status:
-          'do nothing!'
-        else:
-          kotibobot.eq3.store_offset(eq3, new_offset)
+        if not ("Connection failed" in status or "ERROR" in status):
+          kotibobot.eq3.store_attribute_database(eq3, new_offset, 'offset')
