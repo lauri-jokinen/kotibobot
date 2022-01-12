@@ -47,7 +47,8 @@ def send_email(message):
   server.quit()
 
 print('Ajetaan sys_check-skriptiä...')
-time.sleep(55) # 50 normisti
+
+time.sleep(55)
 flag = False
 
 for mi in house.mis:
@@ -68,3 +69,5 @@ if flag:
 else:
   if date.today().weekday() == 0: # only on mondays
     send_email('Kaikki on hyvin.') # ok message
+
+

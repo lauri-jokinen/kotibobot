@@ -15,6 +15,7 @@ import multiprocessing as mp # asychronous plotting
 from house import *
 from common_functions import *
 import kotibobot.weather
+import kotibobot.electricity_price
 
 matplotlib.use('svg') # no GUI when plotting
 
@@ -44,18 +45,18 @@ class AsyncPlotter:
             p.join()
 
 def load_ts_data():
-  file_name = '/home/lowpaw/Downloads/kotibobot/' + datetime.today().strftime("%Y-%m") + '.pkl'
-  df = pd.read_pickle(file_name)
-  
   last_month = datetime.now() - timedelta(hours = 24*20)
   last_month_file_name = '/home/lowpaw/Downloads/kotibobot/' + last_month.strftime("%Y-%m") + '.pkl'
+  last_month = pd.read_pickle(last_month_file_name)
+  
+  file_name = '/home/lowpaw/Downloads/kotibobot/' + datetime.today().strftime("%Y-%m") + '.pkl'
   
   try:
-    last_month = pd.read_pickle(last_month_file_name)
-    df = last_month.append(df, sort=False, ignore_index=True)
+    df = pd.read_pickle(file_name)
   except:
-    'nothing here'
+    return last_month
   
+  df = last_month.append(df, sort=False, ignore_index=True)
   return df
 
 def figure_size():
@@ -261,6 +262,7 @@ def temp_48(room, data_orig, a, make_plot = True):
   targets = []
   for eq3 in eq3_in_rooms[room]:
     targets.append(eq3 + " target")
+    data[eq3 + " target"] = data[eq3 + " target"] + hard_offset
       
   temps = []
   for sensor in mi_in_rooms[room]:
@@ -478,6 +480,55 @@ def humidity_days(room, data_orig, a, make_plot = True):
 
 #plot_ts(['työkkäri']) # , '2021-05-08T16:15', '2021-05-10T17:10'
 
+def electricity_price_days(data_orig, a, make_plot = True):
+  plt.ioff()
+  filename = 'electricity_price.svg'
+  plotname = "Electricity price, past three days"
+  if not make_plot:
+    return html_link(plotname, filename)
+  data = data_orig
+  
+  t2 = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+  t3 = t2 + timedelta(hours = 24)
+  t1 = t2 - timedelta(hours = 24)
+  t0 = t2 - timedelta(hours = 48)
+  
+  data0 = data[data['time'] > t0]
+  data0 = data0[data0['time'] < t1]
+  data0['time'] = data0['time'] + timedelta(hours = 48)
+  
+  data1 = data[data['time'] > t1]
+  data1 = data1[data1['time'] < t2]
+  data1['time'] = data1['time'] + timedelta(hours = 24)
+  
+  data2 = data[data['time'] > t2]
+  data2 = data2[data2['time'] < t3]
+  
+  price = "electricity price"
+  
+  fig, ax = plt.subplots(1,1,figsize=figure_size())
+  data2.plot(x="time",y=price,color='b',alpha=0.8, ax=ax)
+  #plt.ylim([-2, 102])
+  plt.ylabel('          c/kWh',rotation=0)
+  
+  data1.plot(x="time",y=price,linestyle='dashed',ax=ax,color='b',alpha=0.7) # ax=ax laittaa samaan kuvaan
+  data0.plot(x="time",y=price,linestyle=':',ax=ax,color='b',alpha=0.6) # ax=ax laittaa samaan kuvaan
+
+  ax.set_xlabel('')
+  
+  myFmt = mdates.DateFormatter('%-H:%M')
+  ax.xaxis.set_major_formatter(myFmt)
+  ax.xaxis.grid(True, alpha=0.2)
+  ax.yaxis.grid(True, alpha=0.2)
+  ax.yaxis.tick_right()
+  ax.yaxis.set_label_position("right")
+  plt.xticks(rotation=0, ha='center')
+  
+  #plt.show()
+  #plt.savefig('/var/www/html/kotibobot/' + filename)
+  a.save(fig,'/var/www/html/kotibobot/' + filename)
+  return html_link(plotname, filename)
+
 def html_link(text,url):
   return "<a href='https://cloud.laurijokinen.com/kotibobot/" + url + "'>" + text +"</a>"
 
@@ -489,6 +540,7 @@ def main_function(draw_plots = True):
   res.append(temp_hum_inside_outside_forecast(data_orig,a,draw_plots))
   res.append(temp_48_all_rooms(data_orig,a,draw_plots))
   res.append(humidity_48_all_rooms(data_orig,a,draw_plots))
+  res.append(electricity_price_days(data_orig,a,draw_plots))
   for room in rooms:
     res.append("\n" + room.capitalize())
     res.append(temp_48(room, data_orig,a,draw_plots))
@@ -510,6 +562,9 @@ def latest_data():
   timeformat = '%-d.%-m. klo %-H:%M'
   
   res = ['Latest measurement at ' + str(data.iloc[index]['time'].strftime(timeformat)) + '\n']
+  current_price = kotibobot.electricity_price.get()
+  precentile    = kotibobot.electricity_price.precentile(current_price)
+  res.append("el. price precentile : {} %".format(str(round(precentile*100,1))))
   for col in cols:
     if not col == 'time':
       if not math.isnan(data.iloc[-1][col]):

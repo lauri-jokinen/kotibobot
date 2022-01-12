@@ -76,10 +76,10 @@ def command_human(s):
         res.append("Huonetta '" + room + "' ei ole. Valitse jokin näistä: " + ", ".join(rooms) + ". Käyn muut huoneet läpi.")
   return res
 
-def store_attribute_database(mac, offset, attribute):
+def store_attribute_database(mac, value, attribute):
   with open("/home/lowpaw/Downloads/kotibobot/eq3_offset.json") as json_file:
     json_data = json.load(json_file)
-  json_data[mac + attribute] = offset
+  json_data[mac + attribute] = value
   with open("/home/lowpaw/Downloads/kotibobot/eq3_offset.json", 'w') as json_file:
     json.dump(json_data, json_file)
 

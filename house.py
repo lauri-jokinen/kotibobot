@@ -4,7 +4,7 @@ import json
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
     
-hard_offset = 3.0 # positive means lower initial temp in the room
+hard_offset = 1 # positive means lower initial temp in the room
 
 rooms = json.loads("{}")
 
