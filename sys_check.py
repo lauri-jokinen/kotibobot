@@ -3,7 +3,8 @@ from email.mime.text import MIMEText
 import smtplib
 import json
 import time
-from datetime import date
+from datetime import date, datetime
+from wakeonlan import send_magic_packet
 
 import kotibobot
 import house
@@ -70,4 +71,11 @@ else:
   if date.today().weekday() == 0: # only on mondays
     send_email('Kaikki on hyvin.') # ok message
 
+while datetime.now().hour != 2 or datetime.now().minute != 30:
+  time.sleep(15)
 
+if kotibobot.electricity_price.precentile_for_hours(kotibobot.electricity_price.get(), 3, 5) > 90.0:
+  send_magic_packet(koodit['pöytäkone-mac'])
+  send_email('Pöytäkone on käynnistetty')
+else:
+  send_email('Sähkö on kallista :(')

@@ -108,6 +108,7 @@ def to_json(mac):
     res_json['integral'] = read_attribute_database(mac, 'integral')
     res_json['automode'] = int('auto' in res)
     res_json['vacationmode'] = int('vacation' in res) # note lowercase 'vacation'
+    res_json['boostmode'] = int('boost' in res) # note lowercase 'vacation'
   except:
     res_json['target'] = float('nan')
     res_json['valve'] = float('nan')

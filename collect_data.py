@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import pandas as pd
 import numpy as np
@@ -54,16 +54,16 @@ def collect_and_save():
   df.to_pickle(file_name)
 
 while True:
+  t = datetime.now()
+  collect_and_save()
+  kotibobot.plotting.main_function()
+  kotibobot.hs110.ufox_automation()
+  kotibobot.hs110.makkari_humidifier_automation()
   try:
     kotibobot.thermostat_offset_controller.apply_control()
   except:
     print('Jotain meni pieleen kontrollissa, kun erroria pukkaa')
-  kotibobot.command_queue.do()
-  collect_and_save()
-  kotibobot.command_queue.do()
-  kotibobot.plotting.main_function()
-  kotibobot.command_queue.do()
   restart_bluetooth()
-  for nothing in range(5):
-    time.sleep(60*1)
-    kotibobot.command_queue.do()
+  kotibobot.command_queue.do()
+  while datetime.now() - t < timedelta(minutes = 10):
+    time.sleep(10)

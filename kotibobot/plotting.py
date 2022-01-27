@@ -576,3 +576,19 @@ def latest_data():
         res.append(col + ' : ' + str(data.iloc[index][col]) + ' (timestamp: ' + str(data.iloc[index]['time'].strftime(timeformat)) + ')')
   res.sort()
   return '\n'.join(res)
+
+def latest_data_json():
+  data = load_ts_data()
+  cols = data.columns.values.tolist()
+  res = json.loads("{}")
+  for col in cols:
+    if not col == 'time':
+      if not math.isnan(data.iloc[-1][col]):
+        res[col] = data.iloc[-1][col]
+      else:
+        index = len(data.index)-1
+        while index > 0 and math.isnan(data.iloc[index][col]):
+          index = index - 1
+        res[col] = data.iloc[index][col]
+  res['electricity price precentile'] = kotibobot.electricity_price.precentile(res['electricity price'])
+  return res
