@@ -91,8 +91,8 @@ def apply_control():
         temp = latest_temp(room)
         
         # tuning parameters
-        par_intercept = 0.22275 * 1.1
-        par_integral = 5.625e-7 * 100 * 1.1 * 1.1 * 1.1
+        par_intercept = 0.22275 * 1.1 * 1.1
+        par_integral = 5.625e-7 * 100 * 1.1 * 1.1 * 1.1 * 1.1
         
         # evaluate integral and store it
         integral = status['integral']*0.95 + kotibobot.command_queue.median_timedelta().total_seconds() * (- temp + target_temp)
@@ -119,7 +119,7 @@ def apply_control():
         
         print('delta: ' + str(delta))
         
-        if delta == 0.0:
+        if abs(delta) < 0.01:
           continue
         
         new_offset = status['offset'] - delta

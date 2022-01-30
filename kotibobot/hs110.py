@@ -29,7 +29,7 @@ def ufox_automation():
     print('Humidity is high')
     return ufox_command('off')
   
-  if kotibobot.electricity_price.precentile_for_hours(kotibobot.electricity_price.get(), 9, 21) >= 0.90:
+  if kotibobot.electricity_price.precentile_interval(kotibobot.electricity_price.get(), '09:00', '21:00') >= 0.93:
     print('Electricity is costly')
     return ufox_command('off')
   
