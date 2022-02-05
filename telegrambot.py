@@ -159,6 +159,25 @@ def command_queue_do(update, context):
   command_queue_print(update, context)
   waiting_message.delete()
 
+# command: 'työkkäri everyday 21.5 09:10-10:30'
+def timer_new(update, context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
+  try:
+    string = update.message.text
+    waiting_message = update.message.reply_text('Hetkinen...')
+    string_set = string.split(" ")[1:] # Removes the /-command
+    times = string_set[3].split('-')
+    res = kotibobot.schedule.set1(string_set[0], string_set[1], string_set[2], times[0], times[1], True, True)
+  except:
+    update.message.reply_text("ERROR: Something went wrong.")
+    waiting_message.delete()
+    return
+  update.message.reply_text(res)
+  waiting_message.delete()
+  
+
 def wake_on_lan(update, context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
@@ -190,6 +209,7 @@ def main():
   command_queue_wipe_handler = CommandHandler('wipequeue', command_queue_wipe)
   command_queue_do_handler = CommandHandler('runqueue', command_queue_do)
   wake_on_lan_handler = CommandHandler('wakecomputer', wake_on_lan)
+  timer_handler = CommandHandler('timer', timer_new)
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
@@ -205,6 +225,7 @@ def main():
   dispatcher.add_handler(command_queue_wipe_handler)
   dispatcher.add_handler(command_queue_do_handler)
   dispatcher.add_handler(wake_on_lan_handler)
+  dispatcher.add_handler(timer_handler)
 
   # Start the bot
   updater.start_polling()

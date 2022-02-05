@@ -36,7 +36,6 @@ def collect_and_save():
   
   new_data["outside temp"] = kotibobot.weather.temp()
   new_data["outside humidity"] = np.half(kotibobot.weather.humidity())
-  new_data["electricity price"] = kotibobot.electricity_price.get()
   
   new_df = pd.json_normalize(new_data)
   
@@ -64,6 +63,7 @@ while True:
   except:
     print('Jotain meni pieleen kontrollissa, kun erroria pukkaa')
   restart_bluetooth()
+  print(kotibobot.command_queue.print_queue())
   kotibobot.command_queue.do()
   while datetime.now() - t < timedelta(minutes = 10):
     time.sleep(10)

@@ -74,7 +74,9 @@ else:
 while datetime.now().hour != 2 or datetime.now().minute != 30:
   time.sleep(15)
 
-if kotibobot.electricity_price.precentile_interval(kotibobot.electricity_price.get(), '02:00', '03:00') < 90.0:
+send_email('Kello on 2:30')
+
+if kotibobot.electricity_price.precentile_interval(2, 3) < 90.0:
   send_magic_packet(koodit['pöytäkone-mac'])
   send_email('Pöytäkone on käynnistetty')
 else:

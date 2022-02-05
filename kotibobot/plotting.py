@@ -534,13 +534,13 @@ def html_link(text,url):
 
 def main_function(draw_plots = True):
   data_orig = load_ts_data()
-  
+  data_orig_el = kotibobot.electricity_price.load_ts_data()
   a = AsyncPlotter()
   res = ["Kaikki huoneet"] # in html
   res.append(temp_hum_inside_outside_forecast(data_orig,a,draw_plots))
   res.append(temp_48_all_rooms(data_orig,a,draw_plots))
   res.append(humidity_48_all_rooms(data_orig,a,draw_plots))
-  res.append(electricity_price_days(data_orig,a,draw_plots))
+  res.append(electricity_price_days(data_orig_el,a,draw_plots))
   for room in rooms:
     res.append("\n" + room.capitalize())
     res.append(temp_48(room, data_orig,a,draw_plots))
@@ -562,11 +562,13 @@ def latest_data():
   timeformat = '%-d.%-m. klo %-H:%M'
   
   res = ['Latest measurement at ' + str(data.iloc[index]['time'].strftime(timeformat)) + '\n']
-  current_price = kotibobot.electricity_price.get()
-  precentile    = kotibobot.electricity_price.precentile(current_price)
+  el_data = kotibobot.electricity_price.load_ts_data()
+  current_price = kotibobot.electricity_price.latest(el_data)
+  precentile    = kotibobot.electricity_price.precentile(el_data)
   res.append("el. price precentile : {} %".format(str(round(precentile*100,1))))
+  res.append("electricity price : {} snt/kWh".format(str(current_price)))
   for col in cols:
-    if not col == 'time':
+    if not col in ['time','electricity price','el_price']:
       if not math.isnan(data.iloc[-1][col]):
         res.append(col + ' : ' + str(data.iloc[-1][col]))
       else:
@@ -590,5 +592,7 @@ def latest_data_json():
         while index > 0 and math.isnan(data.iloc[index][col]):
           index = index - 1
         res[col] = data.iloc[index][col]
-  res['electricity price precentile'] = kotibobot.electricity_price.precentile(res['electricity price'])
+  el_data = kotibobot.electricity_price.load_ts_data()
+  res['electricity price'] = kotibobot.electricity_price.latest(el_data)
+  res['electricity price precentile'] = kotibobot.electricity_price.precentile(el_data)
   return res

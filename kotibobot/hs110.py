@@ -29,7 +29,7 @@ def ufox_automation():
     print('Humidity is high')
     return ufox_command('off')
   
-  if kotibobot.electricity_price.precentile_interval(kotibobot.electricity_price.get(), '09:00', '21:00') >= 0.93:
+  if kotibobot.electricity_price.precentile_interval(9,21) >= 0.93 and humidity >= 40.0:
     print('Electricity is costly')
     return ufox_command('off')
   
@@ -45,11 +45,15 @@ def makkari_humidifier_automation():
   data = latest_data_json()
   humidity = data['makkarin lämpömittari humidity']
   
-  if humidity >= 43.0:
+  if (datetime.now().hour >= 23 or datetime.now().hour < 1) and humidity >= 40.0:
+    print("It's the middle of the night")
+    return makkari_humidifier_command('off')
+  
+  if humidity >= 44.0:
     print('Humidity is high in makkari')
     return makkari_humidifier_command('off')
   
-  if datetime.now().hour >= 9 or datetime.now().hour < 21:
+  if not (datetime.now().hour >= 20 or datetime.now().hour < 10):
     print("It's day time")
     return makkari_humidifier_command('off')
   
