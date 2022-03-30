@@ -1,5 +1,5 @@
 import numpy as np
-#import scipy.stats
+import scipy.stats
 import random
 import math
 
@@ -38,10 +38,70 @@ def target_has_changed(eq3_name, really):
   
   return not (res[0] == res[1])
 '''
+
+def latest_temps(room):
+  # three latest datapoints for each mi in the room
+  data = load_ts_data()
+  res = json.loads("{}")
+  pts = 4
+  
+  if "mi" in rooms[room]:
+    for mi in rooms[room]["mi"]:
+    
+      col = mac_to_name[mi] + ' temp'
+      res[mi + ' temp'] = []
+      res[mi + ' time'] = []
+      
+      index = len(data.index)-1
+  
+      for i in range(pts):
+        if not math.isnan(data.iloc[index][col]):
+          res[mi + ' temp'].append(data.iloc[index][col])
+          res[mi + ' time'].append(data.iloc[index]['time'])
+        else:
+          while index >= 0 and math.isnan(data.iloc[index][col]):
+            index = index - 1
+          res[mi + ' temp'].append(data.iloc[index][col])
+          res[mi + ' time'].append(data.iloc[index]['time'])
+        index = index-1
+  
+  return res
+
+def error_slope(room):
+  data = latest_temps(room)
+  
+  # result arrays are needed for multiple mis in a room
+  slopes = []
+  intercepts = []
+  
+  if "mi" in rooms[room]:
+    for mi in rooms[room]["mi"]:
+      
+      if len(data[mi + ' time']) == 1:
+        # if only one datapoint, slope is set to zero
+        slopes.append(0.0)
+        intercepts.append(data[mi + ' temp'][0])
+      
+      elif len(data[mi + ' time']) >= 2:
+        # convert timestamps to timedeltas in seconds
+        latest_timestamp = data[mi + ' time'][0]
+        for i in range(len(data[mi + ' time'])):
+          data[mi + ' time'][i] = (data[mi + ' time'][i] - latest_timestamp).total_seconds() # minutes
+        
+        # perform the regression and store the results
+        regression = scipy.stats.siegelslopes(data[mi + ' temp'], data[mi + ' time'])
+        slopes.append(regression[0])
+        intercepts.append(regression[1])
+  
+  # if results are ok, take their median, mi-wise
+  if len(slopes) == 0:
+    return {'intercept': 0.0, 'slope' : 0.0}
+  else:
+    return {'intercept': np.nanmedian(np.array(intercepts)), 'slope' : np.nanmedian(np.array(slopes))}
+
 def read_schedule(eq3):
   weekday = date.today().weekday()
   schedule = kotibobot.schedule.import1()
-  print(kotibobot.schedule.everyday[weekday])
   return kotibobot.schedule.read(schedule[eq3][kotibobot.schedule.everyday[weekday]],datetime.now())
 
 def latest_temp(room):
@@ -72,7 +132,7 @@ def apply_control():
         print(mac_to_name[eq3] + ' käsittelyyn...')
         
         status = kotibobot.eq3.to_json(eq3)
-        print(status)
+        #print(status)
         
         # if status is nan, we won't do anything, but integral decay
         if math.isnan(status['target']):
@@ -87,11 +147,16 @@ def apply_control():
         
         # recent mi data
         temp = latest_temp(room)
-        print('Lämpötila: ' +str(temp) + ' C')
+        #print('Lämpötila: ' +str(temp) + ' C')
+        
+        # evaluate regression of recent mi data
+        regression = error_slope(room)
+        #print(regression)
         
         # tuning parameters
-        par_intercept = 0.22275 * 1.1 * 1.1
-        par_integral = 5.625e-7 * 100 * 1.1 * 1.1 * 1.1 * 1.1
+        par_intercept = 0.245
+        par_integral = 7.49e-05
+        par_slope = 990
         
         # evaluate integral and store it
         integral = status['integral']*0.95 + kotibobot.command_queue.median_timedelta().total_seconds() * (- temp + target_temp)
@@ -100,12 +165,14 @@ def apply_control():
         # if cold, wipe integral
         if target_temp < 16.5:
           kotibobot.eq3.store_attribute_database(eq3, 0.0, 'integral')
-          print("It's cold")
+          #print("It's cold")
         
         print('ind_interc:   ' + str((-temp + target_temp) * par_intercept))
         print('ind_integral: ' + str(integral* par_integral))
+        print('ind_der:      ' + str(-regression['slope'] * par_slope))
         indicator = (-temp + target_temp) * par_intercept
         indicator = indicator + integral*par_integral
+        indicator = indicator - max(min(regression['slope'] * par_slope, 0.3), -0.3)
         
         # we give the control bigger effect, if the data collecting cycle is longer
         indicator = indicator * kotibobot.command_queue.median_timedelta().total_seconds() / 500
@@ -121,13 +188,13 @@ def apply_control():
         if (delta < 0 and status['valve']>=95.0) or (delta > 0 and status['valve']==0.0):
           delta = 2*delta
         
-        print('delta: ' + str(delta))
+        #print('delta: ' + str(delta))
         
         if abs(delta) < 0.01:
           continue
         
         new_target = status['target'] + delta
         
-        print('new_target: ' + str(new_target))
+        #print('new_target: ' + str(new_target))
         
         status = kotibobot.eq3.command(eq3 + ' temp ' + str(new_target))

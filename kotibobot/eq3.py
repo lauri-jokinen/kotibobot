@@ -26,12 +26,12 @@ def command(string):
   res = subprocess.run(s, stdout=subprocess.PIPE)
   res_str = res.stdout.decode('utf-8')
   if "Connection failed" in res_str or "ERROR" in res_str:
-    print('Yhteys pätki kerran')
+    #print('Yhteys pätki kerran')
     time.sleep(5)
     res = subprocess.run(s, stdout=subprocess.PIPE)
     res_str = res.stdout.decode('utf-8')
     if "Connection failed" in res_str or "ERROR" in res_str:
-      print('Yhteys pätki toisen kerran')
+      #print('Yhteys pätki toisen kerran')
       time.sleep(5)
       res = subprocess.run(s, stdout=subprocess.PIPE)
       res_str = res.stdout.decode('utf-8')

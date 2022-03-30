@@ -8,6 +8,7 @@ from wakeonlan import send_magic_packet
 
 import kotibobot
 import house
+from kotibobot.plotting import latest_data_json
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
   koodit = json.load(json_file)
@@ -74,10 +75,13 @@ else:
 while datetime.now().hour != 2 or datetime.now().minute != 30:
   time.sleep(15)
 
-send_email('Kello on 2:30')
+data = latest_data_json()
+temp = data['työkkärin lämpömittari temp']
 
-if kotibobot.electricity_price.precentile_interval(2, 3) < 90.0:
+if kotibobot.electricity_price.precentile_interval(2, 3) > 75.0:
+  send_email('Sähkö on kallista :(')
+elif temp >= 21:
+  send_email('Lämpötila on suuri :(')
+else:
   send_magic_packet(koodit['pöytäkone-mac'])
   send_email('Pöytäkone on käynnistetty')
-else:
-  send_email('Sähkö on kallista :(')

@@ -565,7 +565,9 @@ def latest_data():
   el_data = kotibobot.electricity_price.load_ts_data()
   current_price = kotibobot.electricity_price.latest(el_data)
   precentile    = kotibobot.electricity_price.precentile(el_data)
+  precentile_h  = kotibobot.electricity_price.precentile_interval(datetime.now().hour, datetime.now().hour, el_data)
   res.append("el. price precentile : {} %".format(str(round(precentile*100,1))))
+  res.append("el. price precentile hourly : {} %".format(str(round(precentile_h*100,1))))
   res.append("electricity price : {} snt/kWh".format(str(current_price)))
   for col in cols:
     if not col in ['time','electricity price','el_price']:
@@ -595,4 +597,5 @@ def latest_data_json():
   el_data = kotibobot.electricity_price.load_ts_data()
   res['electricity price'] = kotibobot.electricity_price.latest(el_data)
   res['electricity price precentile'] = kotibobot.electricity_price.precentile(el_data)
+  res['electricity price precentile hourly'] = kotibobot.electricity_price.precentile_interval(datetime.now().hour, datetime.now().hour, el_data)
   return res
