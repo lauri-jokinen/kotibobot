@@ -566,9 +566,9 @@ def latest_data():
   current_price = kotibobot.electricity_price.latest(el_data)
   precentile    = kotibobot.electricity_price.precentile(el_data)
   precentile_h  = kotibobot.electricity_price.precentile_interval(datetime.now().hour, datetime.now().hour, el_data)
-  res.append("el. price precentile : {} %".format(str(round(precentile*100,1))))
-  res.append("el. price precentile hourly : {} %".format(str(round(precentile_h*100,1))))
-  res.append("electricity price : {} snt/kWh".format(str(current_price)))
+  res.append("el. price precentile : {:.2f} %".format(precentile*100,1))
+  res.append("el. price precentile hourly : {:.2f} %".format(precentile_h*100,1))
+  res.append("electricity price : {:.2f} snt/kWh".format(current_price))
   for col in cols:
     if not col in ['time','electricity price','el_price']:
       if not math.isnan(data.iloc[-1][col]):

@@ -3,12 +3,11 @@ from email.mime.text import MIMEText
 import smtplib
 import json
 import time
-from datetime import date, datetime
-from wakeonlan import send_magic_packet
+from datetime import date
 
 import kotibobot
 import house
-from kotibobot.plotting import latest_data_json
+
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
   koodit = json.load(json_file)
@@ -71,17 +70,3 @@ if flag:
 else:
   if date.today().weekday() == 0: # only on mondays
     send_email('Kaikki on hyvin.') # ok message
-
-while datetime.now().hour != 2 or datetime.now().minute != 30:
-  time.sleep(15)
-
-data = latest_data_json()
-temp = data['työkkärin lämpömittari temp']
-
-if kotibobot.electricity_price.precentile_interval(2, 3) > 75.0:
-  send_email('Sähkö on kallista :(')
-elif temp >= 21:
-  send_email('Lämpötila on suuri :(')
-else:
-  send_magic_packet(koodit['pöytäkone-mac'])
-  send_email('Pöytäkone on käynnistetty')

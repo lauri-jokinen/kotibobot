@@ -14,7 +14,7 @@ def collect_and_save():
   new_data = json.loads("{}")
   
   new_data['time'] = json.loads("{}")
-  new_data['time'] = pd.Timestamp.now()
+  new_data['time'] = pd.Timestamp.now().round(freq='T') # round to minutes
   file_name = '/home/lowpaw/Downloads/kotibobot/' + datetime.today().strftime("%Y-%m") + '.pkl'
   
   selected_rooms = []
@@ -52,19 +52,13 @@ def collect_and_save():
   
   df.to_pickle(file_name)
 
-print('Kotibobot is collecting data...')
-while True:
-  t = datetime.now()
-  collect_and_save()
-  kotibobot.plotting.main_function()
-  kotibobot.hs110.ufox_automation()
-  kotibobot.hs110.makkari_humidifier_automation()
-  kotibobot.hs110.tyokkari_humidifier_automation()
-  try:
-    kotibobot.thermostat_offset_controller.apply_control()
-  except:
-    print('Jotain meni pieleen kontrollissa, kun erroria pukkaa')
-  restart_bluetooth()
-  kotibobot.command_queue.do()
-  while datetime.now() - t < timedelta(minutes = 10):
-    time.sleep(10)
+
+t = datetime.now()
+collect_and_save()
+kotibobot.plotting.main_function()
+kotibobot.hs110.ufox_automation()
+kotibobot.hs110.makkari_humidifier_automation()
+kotibobot.hs110.tyokkari_humidifier_automation()
+kotibobot.thermostat_offset_controller.apply_control()
+restart_bluetooth()
+kotibobot.command_queue.do()

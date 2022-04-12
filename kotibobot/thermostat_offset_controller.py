@@ -131,6 +131,13 @@ def apply_control():
       
         print(mac_to_name[eq3] + ' käsittelyyn...')
         
+        target_temp = read_schedule(eq3)
+        
+        # if cold, wipe integral
+        if target_temp < 16.5:
+          kotibobot.eq3.store_attribute_database(eq3, 0.0, 'integral')
+          #print("It's cold")
+        
         status = kotibobot.eq3.to_json(eq3)
         #print(status)
         
@@ -140,9 +147,7 @@ def apply_control():
           continue
         
         # if mode is not auto, we won't touch the temperatures
-        if status['automode']==1 and status['vacationmode']==0 and status['boostmode']==0:
-          target_temp = read_schedule(eq3)
-        else:
+        if not (status['automode']==1 and status['vacationmode']==0 and status['boostmode']==0):
           continue
         
         # recent mi data
@@ -154,18 +159,13 @@ def apply_control():
         #print(regression)
         
         # tuning parameters
-        par_intercept = 0.245
-        par_integral = 7.49e-05
-        par_slope = 990
+        par_intercept = 0.245 * 0.9
+        par_integral = 7.49e-05 * 0.9
+        par_slope = 990 * 0.9
         
         # evaluate integral and store it
-        integral = status['integral']*0.95 + kotibobot.command_queue.median_timedelta().total_seconds() * (- temp + target_temp)
+        integral = status['integral']*0.9 + kotibobot.command_queue.median_timedelta().total_seconds() * (- temp + target_temp)
         kotibobot.eq3.store_attribute_database(eq3, integral, 'integral')
-        
-        # if cold, wipe integral
-        if target_temp < 16.5:
-          kotibobot.eq3.store_attribute_database(eq3, 0.0, 'integral')
-          #print("It's cold")
         
         print('ind_interc:   ' + str((-temp + target_temp) * par_intercept))
         print('ind_integral: ' + str(integral* par_integral))

@@ -5,6 +5,7 @@ from wakeonlan import send_magic_packet
 
 import kotibobot
 import common_functions
+from house import rooms
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
@@ -158,25 +159,44 @@ def command_queue_do(update, context):
   update.message.reply_text('Tehty! Jono on nyt seuraava:')
   command_queue_print(update, context)
   waiting_message.delete()
+  
+def vahti_append(update, context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
+  str = update.message.text
+  str = " ".join(str.split(" ")[1:]) # Removes the /-command
+  waiting_message = update.message.reply_text('Kirjoitetaan komentoa muistiin...')
+  kotibobot.torivahti.append(str)
+  update.message.reply_text('Kirjoittaminen onnistui!')
+  waiting_message.delete()
+
+def vahti_print(update, context):
+  update.message.reply_text(kotibobot.torivahti.print_vahti())
+
+def vahti_wipe(update, context):
+  update.message.reply_text(kotibobot.torivahti.wipe())
 
 # command: 'työkkäri everyday 21.5 09:10-10:30'
 def timer_new(update, context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
-  try:
-    string = update.message.text
-    waiting_message = update.message.reply_text('Hetkinen...')
-    string_set = string.split(" ")[1:] # Removes the /-command
+  string = update.message.text
+  waiting_message = update.message.reply_text('Hetkinen...')
+  #try:
+  string_set = string.split(" ")[1:] # Removes the /-command
+  if len(string_set)==1:
+    schedule = kotibobot.schedule.import1()
+    for eq3 in rooms[string_set[0]]["eq3"]:
+      update.message.reply_text(kotibobot.schedule.print_each_day(schedule[eq3]))
+  else:
     times = string_set[3].split('-')
     res = kotibobot.schedule.set1(string_set[0], string_set[1], string_set[2], times[0], times[1], True, True)
-  except:
-    update.message.reply_text("ERROR: Something went wrong.")
-    waiting_message.delete()
-    return
-  update.message.reply_text(res)
+    update.message.reply_text(res)
+  #except:
+  #  update.message.reply_text("ERROR: Something went wrong.")
   waiting_message.delete()
-  
 
 def wake_on_lan(update, context):
   if not authorized(update, context):
@@ -210,6 +230,9 @@ def main():
   command_queue_do_handler = CommandHandler('runqueue', command_queue_do)
   wake_on_lan_handler = CommandHandler('wakecomputer', wake_on_lan)
   timer_handler = CommandHandler('timer', timer_new)
+  vahti_append_handler = CommandHandler('addtovahti', vahti_append)
+  vahti_print_handler = CommandHandler('printvahti', vahti_print)
+  vahti_wipe_handler = CommandHandler('wipevahti', vahti_wipe)
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
@@ -226,6 +249,9 @@ def main():
   dispatcher.add_handler(command_queue_do_handler)
   dispatcher.add_handler(wake_on_lan_handler)
   dispatcher.add_handler(timer_handler)
+  dispatcher.add_handler(vahti_append_handler)
+  dispatcher.add_handler(vahti_print_handler)
+  dispatcher.add_handler(vahti_wipe_handler)
 
   # Start the bot
   updater.start_polling()

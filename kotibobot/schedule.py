@@ -32,6 +32,8 @@ def eq3_command(room, day, sched):
   for p in arr:
     res.append(str(p[2]))
     res.append(p[1])
+  if len(res) == 2: # fixes a eq-3 bug with constant temp, e.g. '...everyday 21.5 24:00'
+    res = [str(p[2]), '12:00', str(p[2]), '24:00']
   command = " ".join(res)
   kotibobot.command_queue.append(room + ' timer ' + day + ' ' + command)
   #print(room + ' timer ' + day + ' ' + command)
@@ -42,6 +44,7 @@ def bound(sched):
   for i in range(len(sched)):
     res[i] = min(30.0, max(5.0, sched[i]))
   return res
+
 
 def print_each_day(sched_days):
   res = []
