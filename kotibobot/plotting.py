@@ -493,15 +493,15 @@ def electricity_price_days(data_orig, a, make_plot = True):
   t1 = t2 - timedelta(hours = 24)
   t0 = t2 - timedelta(hours = 48)
   
-  data0 = data[data['time'] > t0]
+  data0 = data[data['time'] >= t0]
   data0 = data0[data0['time'] < t1]
   data0['time'] = data0['time'] + timedelta(hours = 48)
   
-  data1 = data[data['time'] > t1]
+  data1 = data[data['time'] >= t1]
   data1 = data1[data1['time'] < t2]
   data1['time'] = data1['time'] + timedelta(hours = 24)
   
-  data2 = data[data['time'] > t2]
+  data2 = data[data['time'] >= t2]
   data2 = data2[data2['time'] < t3]
   
   price = "electricity price"
@@ -544,7 +544,7 @@ def main_function(draw_plots = True):
   for room in rooms:
     res.append("\n" + room.capitalize())
     res.append(temp_48(room, data_orig,a,draw_plots))
-    res.append(temp_offset(room, data_orig,a,draw_plots))
+    #res.append(temp_offset(room, data_orig,a,draw_plots))
     res.append(temp_days(room, data_orig,a,draw_plots))
     res.append(humidity_days(room, data_orig,a,draw_plots))
   a.join()

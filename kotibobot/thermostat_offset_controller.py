@@ -8,7 +8,7 @@ import kotibobot.mi
 import kotibobot.command_queue
 import kotibobot.schedule
 from house import *
-from kotibobot.plotting import load_ts_data
+from kotibobot.plotting import load_ts_data, latest_data_json
 from datetime import date, datetime
 
 '''
@@ -138,11 +138,19 @@ def apply_control():
           kotibobot.eq3.store_attribute_database(eq3, 0.0, 'integral')
           #print("It's cold")
         
-        status = kotibobot.eq3.to_json(eq3)
+        #status = kotibobot.eq3.to_json(eq3)
+        status = latest_data_json()
+        status['target'] = status[mac_to_name[eq3] + ' target']
+        status['valve'] = status[mac_to_name[eq3] + ' valve']
+        status['vacationmode'] = status[mac_to_name[eq3] + ' vacationmode']
+        status['boostmode'] = status[mac_to_name[eq3] + ' boostmode']
+        status['automode'] = status[mac_to_name[eq3] + ' automode']
+        status['integral'] = kotibobot.eq3.read_attribute_database(eq3, 'integral')
         #print(status)
         
         # if status is nan, we won't do anything, but integral decay
         if math.isnan(status['target']):
+          #if math.isnan(data[mac_to_name[eq3] + ' target']):
           kotibobot.eq3.store_attribute_database(eq3, status['integral']*0.95, 'integral')
           continue
         

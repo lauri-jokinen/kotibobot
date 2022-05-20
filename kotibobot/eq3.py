@@ -115,6 +115,8 @@ def to_json(mac):
     res_json['offset'] = read_attribute_database(mac, 'offset')
     res_json['integral'] = read_attribute_database(mac, 'integral')
     res_json['automode'] = -1
+    res_json['vacationmode'] = -1
+    res_json['boostmode'] = -1
   return res_json
 
 # command could be e.g. 'mac timer mon 22.5'

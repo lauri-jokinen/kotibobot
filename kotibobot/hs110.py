@@ -34,31 +34,36 @@ def ufox_automation():
   data = latest_data_json()
   humidity = data['olkkarin lämpömittari humidity']
   
-  if humidity >= 41.0:
+  if humidity >= 48.0:
     #print('Humidity is high')
     return ufox_command('off')
   
-  if kotibobot.electricity_price.precentile_interval(9,21) >= 0.8 and humidity >= 36.0:
+  if kotibobot.electricity_price.precentile_interval(9,21) >= 0.85 and humidity >= 42.0:
     #print('Electricity is costly')
     return ufox_command('off')
   
-  if datetime.now().hour >= 21 or datetime.now().hour < 9:
+  if datetime.now().hour >= 22 or datetime.now().hour < 9:
     #print("It's night time")
     return ufox_command('off')
+    
+  if (data['olkkarin nuppi vacationmode'] == 1 or data['keittiön nuppi vacationmode'] == 1) and (data['olkkarin nuppi target'] <= 16.0 or data['keittiön nuppi target'] <= 16.0):
+    print("It's cold time")
+    return ufox_command('off')
   
-  #print("Ufox on")
+  print("Ufox on")
   return ufox_command('on')
 
 
 def makkari_humidifier_automation():
   data = latest_data_json()
   humidity = data['makkarin lämpömittari humidity']
+  temp = data['makkarin lämpömittari temp']
   
-  if (datetime.now().hour >= 23 or datetime.now().hour < 1) and humidity >= 40.0:
+  if (datetime.now().hour >= 23 or datetime.now().hour < 1) and humidity >= 43.0:
     #print("It's the middle of the night")
     return makkari_humidifier_command('off')
   
-  if humidity >= 42.0:
+  if humidity >= 50.0:
     #print('Humidity is high in makkari')
     return makkari_humidifier_command('off')
   
@@ -74,14 +79,13 @@ def tyokkari_humidifier_automation():
   humidity = data['työkkärin lämpömittari humidity']
   #print('Humidity: ' + str(humidity))
   
-  if datetime.now().hour >= 21 or datetime.now().hour < 9:
+  if datetime.now().hour >= 22 or datetime.now().hour < 9:
     #print("It's night time")
     return tyokkari_humidifier_command('off')
   
-  if humidity >= 42.0:
+  if humidity >= 50.0:
     #print('Humidity is high')
     return tyokkari_humidifier_command('off')
   
   #print("Makkari humidifier on")
   return tyokkari_humidifier_command('on')
-
