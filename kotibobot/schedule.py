@@ -7,6 +7,7 @@ import kotibobot.command_queue
 from house import eq3s
 from house import rooms
 from house import hard_offset
+from os.path import exists
 
 everyday = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 weekdays = ['mon', 'tue', 'wed', 'thu', 'fri']
@@ -16,18 +17,11 @@ def only_time(a):
   ta = a.strftime('%H:%M')
   return datetime.strptime(ta, '%H:%M')
 
-def string(sched):
-  arr = pretty(sched)
-  res = []
-  for p in arr:
-    res.append(p[0] + '-' + p[1] + ' ' + str(p[2]))
-  return "\n".join(res)
-
 def eq3_schedule(sched):
   return simplify(bound(round1(sched)))
 
 def eq3_command(room, day, sched):
-  arr = pretty(simplify(round1(bound(sched-hard_offset))))
+  arr = eq3_format_array(simplify(round1(bound(sched-hard_offset))))
   res = []
   for p in arr:
     res.append(str(p[2]))
@@ -46,13 +40,18 @@ def bound(sched):
   return res
 
 
-def print_each_day(sched_days):
+def print_whole_schedule(sched_days):
   res = []
   for day in everyday:
-    res.append(day +'\n' + string(sched_days[day]))
+    arr2 = eq3_format_array(sched_days[day])
+    res2 = []
+    for p in arr2:
+      res2.append(p[0] + '-' + p[1] + ' ' + str(p[2]))
+    string = "\n".join(res2)
+    res.append(day.capitalize() +'\n' + string)
   return '\n\n'.join(res)
 
-def pretty(sched):
+def eq3_format_array(sched):
   dateformat = '%H:%M'
   i = 0
   j = 1
@@ -88,7 +87,7 @@ def round1(sched):
   return res
 
 def eq3_specs_ok(sched):
-    return len(pretty(sched)) <= 5
+    return len(eq3_format_array(sched)) <= 5
 
 def read(sched,time): # time is datetime
   t = datetime.strptime('1/1/00 00:00:00', '%d/%m/%y %H:%M:%S')
@@ -148,42 +147,15 @@ def set1(room,d,T,t1,t2,do_eq3_command=False,export_schedule=False): # ti 1 and 
   if export_schedule:
     export1(schedule)
   
-  return print_each_day(schedule[last_eq3])
-'''
-def sum1(sched,other):
-  res = np.zeros(24*3*2)
-  res = sched + other
-  return res
+  return print_whole_schedule(schedule[last_eq3])
 
-def substract(sched,other):
-  res = np.zeros(24*3*2)
-  res = sched - other
-  return res
-  
-def update_integral(sched,res,target): # basically = int^0.95 + error
-  error = res.error(target)
-  sched = np.power(np.abs(sched), 0.95)*np.sign(sched) + error
-  return sched
-  
-def error(sched,target):
-  return target.substract(sched)
 
-def new_target(sched,integral,error):
-  res = np.zeros(24*3*2)
-  # tune these!
-  ki = 0.1
-  kp = 0.1
-  res = sched + integral*ki + error*kp
-  return res
-  
-def target(sched,offset):
-  return sum1(sched,offset)
-'''
 def import1():
-  try:
-    with open("/home/lowpaw/Downloads/kotibobot/schedules.json", 'r') as json_file:
+  file_name = "/home/lowpaw/Downloads/kotibobot/schedules.json"
+  if exists(file_name):
+    with open(file_name, 'r') as json_file:
       s = json.load(json_file)
-  except:
+  else:
     s = json.loads("{}")
   schedules = json.loads("{}")
   
@@ -209,27 +181,6 @@ def export1(schedules):
   with open("/home/lowpaw/Downloads/kotibobot/schedules.json", 'w') as json_file:
     json.dump(s, json_file)
 '''
-schedules = import1()
-
-for eq3 in eq3s:
-  print(print_each_day(schedules[eq3]))
-  schedules[eq3]['mon'] = set1(schedules[eq3]['mon'], 7.0, '12:00', '19:20')
-  print('current:' + str(read(schedules[eq3]['mon'],datetime.now())))
-export1(schedules)
-'''
-
-'''
-f = open("/home/lowpaw/Downloads/kotibobot/schedules.pkl", 'w+')
-pickle.dump(schedules,f)
-f.close()
-
-
-Suunnitelma:
-
-1. Kylmän ajan optimointi
-1. Aikataulun keskimääräinen optimointi PI-ohjaimella ja säännöllinen tallennus eq3:lle
-
-
 a = np.zeros(24*3*2)
 a[12] = 8.0
 a[-2] = 5.2

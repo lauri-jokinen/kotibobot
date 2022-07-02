@@ -1,1 +1,1 @@
-import kotibobot.eq3, kotibobot.mi, kotibobot.command_queue, kotibobot.plotting, kotibobot.weather, kotibobot.electricity_price, kotibobot.hs110, kotibobot.schedule, kotibobot.torivahti
+import kotibobot.eq3, kotibobot.mi, kotibobot.command_queue, kotibobot.plotting, kotibobot.weather, kotibobot.electricity_price, kotibobot.hs110, kotibobot.schedule, kotibobot.torivahti, kotibobot.regression, kotibobot.thermostat_offset_controller, kotibobot.switchbot

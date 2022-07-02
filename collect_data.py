@@ -1,14 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import pandas as pd
 import numpy as np
-import time
 
 import kotibobot
 from house import *
 from common_functions import *
 
-import kotibobot.thermostat_offset_controller
+#import kotibobot.thermostat_offset_controller # sisältyy kotibobot-pakettiin? eiks juu?
+
+#import requests, urllib.parse # Needed for telegram
 
 def collect_and_save():
   new_data = json.loads("{}")
@@ -33,11 +34,13 @@ def collect_and_save():
       
     for sensor in mi_in_rooms[room]:
       mi_reading = kotibobot.mi.to_json(name_to_mac[sensor])
-      new_data[sensor + " temp"]     = mi_reading['temp']
+      new_data[sensor + " temp"]     = np.single(mi_reading['temp'])
       new_data[sensor + " humidity"] = np.half(mi_reading['humidity'])
   
-  new_data["outside temp"] = kotibobot.weather.temp()
+  new_data["outside temp"] = np.single(kotibobot.weather.temp())
   new_data["outside humidity"] = np.half(kotibobot.weather.humidity())
+  
+  new_data["olkkari power socket"] = np.half(kotibobot.hs110.ufox_power())
   
   new_df = pd.json_normalize(new_data)
   
@@ -53,15 +56,36 @@ def collect_and_save():
   #print(df)
   
   df.to_pickle(file_name)
+'''
+def telegram_message(html_content): # import requests, urllib.parse
+  chat_id = '131994588' # Lapa
+  url = 'https://api.telegram.org/bot'
+  url = url + koodit["L-bot"]
+  url = url + '/sendMessage?chat_id='
+  url = url + chat_id
+  url = url + '&text='
+  url = url + urllib.parse.quote(html_content)
+  url = url + '&parse_mode=html'
+  response = requests.get(url)
+  return response
 
-
+telegram_message('juu?')
+'''
 t = datetime.now()
 collect_and_save()
+kotibobot.regression.do(['outside temp', 'olkkari power socket'], 'olkkarin lämpömittari temp', [])
 kotibobot.plotting.main_function()
-kotibobot.hs110.ufox_automation()
-kotibobot.hs110.makkari_humidifier_automation()
-kotibobot.hs110.tyokkari_humidifier_automation()
-kotibobot.thermostat_offset_controller.apply_control()
+
+#kotibobot.hs110.ufox_automation()
+#kotibobot.hs110.makkari_humidifier_automation()
+#kotibobot.hs110.tyokkari_humidifier_automation()
+
+#kotibobot.thermostat_offset_controller.apply_control()
+#kotibobot.command_queue.do()
 restart_bluetooth()
-kotibobot.command_queue.do()
+
+
 print('jii')
+
+#telegram_message('jii!')
+

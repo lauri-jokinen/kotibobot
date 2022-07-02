@@ -11,6 +11,7 @@ import matplotlib
 import matplotlib.dates as mdates # helps to format dates in x-axis
 import math
 import multiprocessing as mp # asychronous plotting
+from os.path import exists
 
 from house import *
 from common_functions import *
@@ -45,18 +46,20 @@ class AsyncPlotter:
             p.join()
 
 def load_ts_data():
-  last_month = datetime.now() - timedelta(hours = 24*20)
-  last_month_file_name = '/home/lowpaw/Downloads/kotibobot/' + last_month.strftime("%Y-%m") + '.pkl'
-  last_month = pd.read_pickle(last_month_file_name)
+  df = pd.DataFrame({})
+  timeformat = '%Y-%m'
+  this_month = datetime.now().strftime(timeformat)
+  last_month = (datetime.now().replace(day=1) - timedelta(days=2)).strftime(timeformat)
   
-  file_name = '/home/lowpaw/Downloads/kotibobot/' + datetime.today().strftime("%Y-%m") + '.pkl'
   
-  try:
-    df = pd.read_pickle(file_name)
-  except:
-    return last_month
+  file_name = '/home/lowpaw/Downloads/kotibobot/{}.pkl'.format(last_month)
+  if exists(file_name):
+    df = df.append(pd.read_pickle(file_name), sort=False, ignore_index=True)
   
-  df = last_month.append(df, sort=False, ignore_index=True)
+  file_name = '/home/lowpaw/Downloads/kotibobot/{}.pkl'.format(this_month)
+  if exists(file_name):
+    df = df.append(pd.read_pickle(file_name), sort=False, ignore_index=True)
+    
   return df
 
 def figure_size():
@@ -271,7 +274,8 @@ def temp_48(room, data_orig, a, make_plot = True):
   fig, ax1 = plt.subplots(1,1,figsize=figure_size())
   
   data.plot(x="time",y=(temps), alpha=0.7, color='r', ax=ax1)
-  data.plot(x="time",y=(targets), alpha=0.7,linestyle='dashed', ax=ax1)
+  if len(targets) > 0:
+    data.plot(x="time",y=(targets), alpha=0.7,linestyle='dashed', ax=ax1)
   plt.ylabel('°C   ',rotation=0)
   
   lim = list(plt.ylim())
@@ -281,7 +285,8 @@ def temp_48(room, data_orig, a, make_plot = True):
   plt.xticks(rotation=0, ha='center')
   
   ax2 = ax1.twinx()
-  data.plot(x="time",y=(valves),linestyle=':', ax=ax2, alpha=0.7) # ax=ax laittaa samaan kuvaan secondary_y=True,
+  if len(valves) > 0:
+    data.plot(x="time",y=(valves),linestyle=':', ax=ax2, alpha=0.7) # ax=ax laittaa samaan kuvaan secondary_y=True,
   #plt.ylim([-2, 102])
   #ax1.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
   
@@ -477,6 +482,53 @@ def humidity_days(room, data_orig, a, make_plot = True):
   #plt.savefig('/var/www/html/kotibobot/' + filename)
   a.save(fig,'/var/www/html/kotibobot/' + filename)
   return html_link(plotname, filename)
+  
+
+def hs110_days(data_orig, a, make_plot = True):
+  plt.ioff()
+  filename = 'hs110.svg'
+  plotname = "HS110 consumption"
+  if not make_plot:
+    return html_link(plotname, filename)
+  data = data_orig
+  
+  t2 = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+  t3 = t2 + timedelta(hours = 24)
+  t1 = t2 - timedelta(hours = 24)
+  t0 = t2 - timedelta(hours = 48)
+  
+  data0 = data[data['time'] > t0]
+  data0 = data0[data0['time'] < t1]
+  data0['time'] = data0['time'] + timedelta(hours = 48)
+  
+  data1 = data[data['time'] > t1]
+  data1 = data1[data1['time'] < t2]
+  data1['time'] = data1['time'] + timedelta(hours = 24)
+  
+  data2 = data[data['time'] > t2]
+  data2 = data2[data2['time'] < t3]
+  
+  fig, ax = plt.subplots(1,1,figsize=figure_size())
+  data2.plot(x="time",y='olkkari power socket',color='b',alpha=0.8, ax=ax)
+  #plt.ylim([-2, 102])
+  plt.ylabel(' W',rotation=0)
+  
+  data1.plot(x="time",y='olkkari power socket',linestyle='dashed',ax=ax,color='b',alpha=0.7) # ax=ax laittaa samaan kuvaan
+  data0.plot(x="time",y='olkkari power socket',linestyle=':',ax=ax,color='b',alpha=0.6) # ax=ax laittaa samaan kuvaan
+  ax.set_xlabel('')
+  
+  myFmt = mdates.DateFormatter('%-H:%M')
+  ax.xaxis.set_major_formatter(myFmt)
+  ax.xaxis.grid(True, alpha=0.2)
+  ax.yaxis.grid(True, alpha=0.2)
+  ax.yaxis.tick_right()
+  ax.yaxis.set_label_position("right")
+  plt.xticks(rotation=0, ha='center')
+  
+  #plt.show()
+  #plt.savefig('/var/www/html/kotibobot/' + filename)
+  a.save(fig,'/var/www/html/kotibobot/' + filename)
+  return html_link(plotname, filename)
 
 #plot_ts(['työkkäri']) # , '2021-05-08T16:15', '2021-05-10T17:10'
 
@@ -489,20 +541,29 @@ def electricity_price_days(data_orig, a, make_plot = True):
   data = data_orig
   
   t2 = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+  
   t3 = t2 + timedelta(hours = 24)
+  t4 = t3 + timedelta(hours = 24)
   t1 = t2 - timedelta(hours = 24)
   t0 = t2 - timedelta(hours = 48)
   
-  data0 = data[data['time'] >= t0]
-  data0 = data0[data0['time'] < t1]
-  data0['time'] = data0['time'] + timedelta(hours = 48)
+  #data0 = data[data['time'] >= t0]
+  #data0 = data0[data0['time'] < t1]
+  #data0['time'] = data0['time'] + timedelta(hours = 48)
   
   data1 = data[data['time'] >= t1]
   data1 = data1[data1['time'] < t2]
   data1['time'] = data1['time'] + timedelta(hours = 24)
   
-  data2 = data[data['time'] >= t2]
-  data2 = data2[data2['time'] < t3]
+  data2 = data[data['time'] >= t2] # from start of the day to current
+  data2 = data2[data2['time'] < datetime.now()]
+  
+  data3 = data[data['time'] >= datetime.now() - timedelta(hours = 1)] # from current to end of the day
+  data3 = data3[data3['time'] < t3]
+  
+  data4 = data[data['time'] >= t3]
+  data4 = data4[data4['time'] < t4]
+  data4['time'] = data4['time'] - timedelta(hours = 24)
   
   price = "electricity price"
   
@@ -511,8 +572,13 @@ def electricity_price_days(data_orig, a, make_plot = True):
   #plt.ylim([-2, 102])
   plt.ylabel('          c/kWh',rotation=0)
   
-  data1.plot(x="time",y=price,linestyle='dashed',ax=ax,color='b',alpha=0.7) # ax=ax laittaa samaan kuvaan
-  data0.plot(x="time",y=price,linestyle=':',ax=ax,color='b',alpha=0.6) # ax=ax laittaa samaan kuvaan
+  data1.plot(x="time",y=price,linestyle='dashed',ax=ax,color='b',alpha=0.6) # ax=ax laittaa samaan kuvaan
+  #data0.plot(x="time",y=price,linestyle=':',ax=ax,color='b',alpha=0.6) # ax=ax laittaa samaan kuvaan
+  
+  if not data3.empty:
+    data3.plot(x="time",y=price,ax=ax,color='r',alpha=0.8) # ax=ax laittaa samaan kuvaan
+  if not data4.empty:
+    data4.plot(x="time",y=price,linestyle='dashed',ax=ax,color='r',alpha=0.8) # ax=ax laittaa samaan kuvaan
 
   ax.set_xlabel('')
   
@@ -541,10 +607,11 @@ def main_function(draw_plots = True):
   res.append(temp_48_all_rooms(data_orig,a,draw_plots))
   res.append(humidity_48_all_rooms(data_orig,a,draw_plots))
   res.append(electricity_price_days(data_orig_el,a,draw_plots))
+  res.append(hs110_days(data_orig,a,draw_plots))
   for room in rooms:
     res.append("\n" + room.capitalize())
     res.append(temp_48(room, data_orig,a,draw_plots))
-    #res.append(temp_offset(room, data_orig,a,draw_plots))
+    ##res.append(temp_offset(room, data_orig,a,draw_plots))
     res.append(temp_days(room, data_orig,a,draw_plots))
     res.append(humidity_days(room, data_orig,a,draw_plots))
   a.join()
@@ -563,7 +630,7 @@ def latest_data():
   
   res = ['Latest measurement at ' + str(data.iloc[index]['time'].strftime(timeformat)) + '\n']
   el_data = kotibobot.electricity_price.load_ts_data()
-  current_price = kotibobot.electricity_price.latest(el_data)
+  current_price = kotibobot.electricity_price.current(el_data)
   precentile    = kotibobot.electricity_price.precentile(el_data)
   precentile_h  = kotibobot.electricity_price.precentile_interval(datetime.now().hour, datetime.now().hour, el_data)
   res.append("el. price precentile : {:.2f} %".format(precentile*100,1))
@@ -572,12 +639,14 @@ def latest_data():
   for col in cols:
     if not col in ['time','electricity price','el_price']:
       if not math.isnan(data.iloc[-1][col]):
-        res.append(col + ' : ' + str(data.iloc[-1][col]))
+        #res.append(col + ' : ' + str(data.iloc[-1][col]))
+        res.append("{} : {:.2f}".format(col, data.iloc[-1][col]))
       else:
         index = len(data.index)-1
         while index > 0 and math.isnan(data.iloc[index][col]):
           index = index - 1
-        res.append(col + ' : ' + str(data.iloc[index][col]) + ' (timestamp: ' + str(data.iloc[index]['time'].strftime(timeformat)) + ')')
+        #res.append(col + ' : ' + str(data.iloc[index][col]) + ' (timestamp: ' + str(data.iloc[index]['time'].strftime(timeformat)) + ')')
+        res.append("{} : {:.2f} (timestamp {})".format(col, data.iloc[index][col], str(data.iloc[index]['time'].strftime(timeformat))))
   res.sort()
   return '\n'.join(res)
 
@@ -595,7 +664,7 @@ def latest_data_json():
           index = index - 1
         res[col] = data.iloc[index][col]
   el_data = kotibobot.electricity_price.load_ts_data()
-  res['electricity price'] = kotibobot.electricity_price.latest(el_data)
+  res['electricity price'] = kotibobot.electricity_price.current(el_data)
   res['electricity price precentile'] = kotibobot.electricity_price.precentile(el_data)
   res['electricity price precentile hourly'] = kotibobot.electricity_price.precentile_interval(datetime.now().hour, datetime.now().hour, el_data)
   return res

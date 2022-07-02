@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import time
 import math
+from os.path import exists
 
 import kotibobot
 from house import *
@@ -12,44 +13,32 @@ from common_functions import *
 import kotibobot.electricity_price
 
 def collect_and_save():
-  new_data = json.loads("{}")
   
-  new_data['time'] = pd.Timestamp.now().floor(freq='H') # rounded to hour
+  new_df = kotibobot.electricity_price.get_forwards()
+  
   file_name = '/home/lowpaw/Downloads/kotibobot/el-price_' + datetime.today().strftime("%Y") + '.pkl'
   
-  price = kotibobot.electricity_price.get()
-  
-  if math.isnan(price) or (price == kotibobot.electricity_price.latest()):
-    time.sleep(12.13)
-    price = kotibobot.electricity_price.get()
-  
-  if math.isnan(price):
-    return
-  
-  new_data["electricity price"] = price
-  
-  new_df = pd.json_normalize(new_data)
-  
-  new_file = False
-  
-  try:
+  if exists(file_name):
     df = pd.read_pickle(file_name)
     df = df.append(new_df, sort=False, ignore_index=True)
-  except:
+  else:
     df = new_df
-    new_file = True
+  
   
   df = df[df['electricity price'].notna()]
   df['time'] = df['time'].dt.floor('H')
+  
+  df = df.iloc[::-1]
   df = df.drop_duplicates(subset=['time'])
+  df = df.iloc[::-1]
+  
+  df = df.sort_values(by=['time'])
   
   df.reset_index(drop=True, inplace=True)
   #print(df)
-  
   df.to_pickle(file_name)
 
 # run function
-time.sleep(5.32)
 collect_and_save()
 
 # cron:

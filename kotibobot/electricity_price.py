@@ -1,15 +1,20 @@
 from datetime import date, datetime, timedelta
 import pandas as pd
 import numpy as np
-import requests
-import time
-import math
-from bs4 import BeautifulSoup
+from os.path import exists
 
+# https://github.com/kipe/nordpool
+from nordpool import elspot
+
+'''
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
+from bs4 import BeautifulSoup
+import requests
+import time
+import math
 
 def get_nonrobust():
   # fetch the current electricity price in Finland
@@ -66,34 +71,47 @@ def get():
     except:
       res = float('nan')
   return res
+'''
+
+def get_forwards():
+  # Initialize class for fetching Elspot prices
+  prices_spot = elspot.Prices()
+  # Fetch hourly Elspot prices for Finland and print the resulting dictionary
+  p = prices_spot.hourly(areas=['FI'])
+  df = pd.DataFrame(p['areas']['FI']['values'])
+  df['time'] = df['start'].dt.tz_convert('Europe/Helsinki').dt.tz_localize(None)
+  df['electricity price'] = np.single(df['value'] * 1.24 * 0.1) # tax 24 % and conversion EUR/MW to cent/kW
+  df = df[['time','electricity price']]
+  return df
 
 def load_ts_data():
   df = pd.DataFrame()
-  year = datetime.now().year
-  for i in range(1):
-    file_name = '/home/lowpaw/Downloads/kotibobot/el-price_' + str(year) + '.pkl'
-    try:
+  year = datetime.now().year + 1
+  for i in range(2):
+    file_name = '/home/lowpaw/Downloads/kotibobot/el-price_' + str(year - i) + '.pkl'
+    if exists(file_name):
       df_year = pd.read_pickle(file_name)
       df = df_year.append(df, sort=False, ignore_index=True)
-    except:
-      "nothing here"
-    year = year - 1
+  df = df.drop_duplicates(subset=['time'])
   return df[df['time'] > datetime.now() - timedelta(hours = 8765.81)]
 
-def latest(df = load_ts_data()):
-  res = float('nan')
-  index = len(df.index)-1
-  return df.iloc[-1]['electricity price']
+def current(df = load_ts_data()):
+  time = datetime.now().replace(minute=0, second=0, microsecond=0)
+  df_with_value = df[df['time'] == time]
+  if len(df_with_value.index) >= 1:
+    return df_with_value.iloc[0]['electricity price']
+  else:
+    return float('nan')
 
 def precentile(df = load_ts_data()):
-  value = latest(df)
+  value = current(df)
   df_below = df[df['electricity price']<=value]
   return len(df_below) / len(df)
 
 def precentile_interval(h1, h2, df = load_ts_data()):
   df = df[df['time'].dt.hour>=h1]
   df = df[df['time'].dt.hour<=h2]
-  value = latest(df)
+  value = current(df)
   df_below = df[df['electricity price']<=value]
   return len(df_below) / len(df)
 

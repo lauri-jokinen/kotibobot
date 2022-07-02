@@ -189,7 +189,7 @@ def timer_new(update, context):
   if len(string_set)==1:
     schedule = kotibobot.schedule.import1()
     for eq3 in rooms[string_set[0]]["eq3"]:
-      update.message.reply_text(kotibobot.schedule.print_each_day(schedule[eq3]))
+      update.message.reply_text(kotibobot.schedule.print_whole_schedule(schedule[eq3]))
   else:
     times = string_set[3].split('-')
     res = kotibobot.schedule.set1(string_set[0], string_set[1], string_set[2], times[0], times[1], True, True)
@@ -207,6 +207,12 @@ def wake_on_lan(update, context):
 
 def outside_temp(update, context):
   update.message.reply_text(kotibobot.weather.temp())
+  
+def switchbot_push(update, context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
+  update.message.reply_text(kotibobot.switchbot.press())
 
 def main():
   # Create Updater object and attach dispatcher to it
@@ -233,6 +239,7 @@ def main():
   vahti_append_handler = CommandHandler('addtovahti', vahti_append)
   vahti_print_handler = CommandHandler('printvahti', vahti_print)
   vahti_wipe_handler = CommandHandler('wipevahti', vahti_wipe)
+  switchbot_handler = CommandHandler('cool', switchbot_push)
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
@@ -252,6 +259,7 @@ def main():
   dispatcher.add_handler(vahti_append_handler)
   dispatcher.add_handler(vahti_print_handler)
   dispatcher.add_handler(vahti_wipe_handler)
+  dispatcher.add_handler(switchbot_handler)
 
   # Start the bot
   updater.start_polling()
