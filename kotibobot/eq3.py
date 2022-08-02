@@ -9,18 +9,6 @@ from common_functions import *
 import kotibobot.append_vacation
 from kotibobot.command_queue import remove_append_vacation as remove_append_vacation
 
-'''
-def substitute_hard_offset(string):
-  s = re.split('\n|°C| |\t', string)
-  for i in range(len(s)):
-    try:
-      f = float(s[i])
-    except:
-      continue
-    s[i] = str(f - hard_offset)
-  return 
-'''
-
 def command(string):
   s = ['/home/lowpaw/Downloads/eq3/eq3.exp', 'hci1'] + string.split(' ')
   res = subprocess.run(s, stdout=subprocess.PIPE)
@@ -76,6 +64,7 @@ def command_human(s):
         res.append("Huonetta '" + room + "' ei ole. Valitse jokin näistä: " + ", ".join(rooms) + ". Käyn muut huoneet läpi.")
   return res
 
+# in the database we have the integral data for PID functionality
 def store_attribute_database(mac, value, attribute):
   with open("/home/lowpaw/Downloads/kotibobot/eq3_offset.json") as json_file:
     json_data = json.load(json_file)
@@ -101,10 +90,6 @@ def to_json(mac):
     valve_reading = (res.split("Valve:")[1]).split("%")[0]
     valve_reading = float(valve_reading.split(" ")[-1])
     res_json['valve'] = valve_reading
-    #offset_reading = (res.split("Offset temperature:")[1]).split("°C")[0]
-    #offset_reading = float(offset_reading.split(" ")[-1])
-    #res_json['offset'] = offset_reading
-    res_json['offset'] = read_attribute_database(mac, 'offset')
     res_json['integral'] = read_attribute_database(mac, 'integral')
     res_json['automode'] = int('auto' in res)
     res_json['vacationmode'] = int('vacation' in res) # note lowercase 'vacation'
@@ -112,11 +97,10 @@ def to_json(mac):
   except:
     res_json['target'] = float('nan')
     res_json['valve'] = float('nan')
-    res_json['offset'] = read_attribute_database(mac, 'offset')
     res_json['integral'] = read_attribute_database(mac, 'integral')
-    res_json['automode'] = -1
-    res_json['vacationmode'] = -1
-    res_json['boostmode'] = -1
+    res_json['automode'] = float('nan')
+    res_json['vacationmode'] = float('nan')
+    res_json['boostmode'] = float('nan')
   return res_json
 
 # command could be e.g. 'mac timer mon 22.5'

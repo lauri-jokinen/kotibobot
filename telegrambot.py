@@ -131,7 +131,7 @@ def data_command(update, context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
-  update.message.reply_text(kotibobot.plotting.latest_data())
+  update.message.reply_text(kotibobot.plotting.print_latest_data())
 
 def restart_bluetooth(update, context):
   if not authorized(update, context):

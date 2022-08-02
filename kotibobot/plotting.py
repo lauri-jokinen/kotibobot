@@ -579,7 +579,13 @@ def electricity_price_days(data_orig, a, make_plot = True):
     data3.plot(x="time",y=price,ax=ax,color='r',alpha=0.8) # ax=ax laittaa samaan kuvaan
   if not data4.empty:
     data4.plot(x="time",y=price,linestyle='dashed',ax=ax,color='r',alpha=0.8) # ax=ax laittaa samaan kuvaan
-
+  
+  duck = kotibobot.electricity_price.duck_curve(data_orig)
+  df_duck = pd.DataFrame()
+  df_duck['time'] = data1['time']
+  df_duck['duck'] = duck
+  df_duck.plot(x="time",y='duck',ax=ax,color='k',alpha=0.8) # ax=ax laittaa samaan kuvaan
+  
   ax.set_xlabel('')
   
   myFmt = mdates.DateFormatter('%-H:%M')
@@ -607,11 +613,10 @@ def main_function(draw_plots = True):
   res.append(temp_48_all_rooms(data_orig,a,draw_plots))
   res.append(humidity_48_all_rooms(data_orig,a,draw_plots))
   res.append(electricity_price_days(data_orig_el,a,draw_plots))
-  res.append(hs110_days(data_orig,a,draw_plots))
+  #res.append(hs110_days(data_orig,a,draw_plots))
   for room in rooms:
     res.append("\n" + room.capitalize())
     res.append(temp_48(room, data_orig,a,draw_plots))
-    ##res.append(temp_offset(room, data_orig,a,draw_plots))
     res.append(temp_days(room, data_orig,a,draw_plots))
     res.append(humidity_days(room, data_orig,a,draw_plots))
   a.join()
@@ -622,49 +627,53 @@ def main_function(draw_plots = True):
 #print('plotting...')
 #main_function()
 
-def latest_data():
-  data = load_ts_data()
-  index = len(data.index)-1
-  cols = data.columns.values.tolist()
-  timeformat = '%-d.%-m. klo %-H:%M'
-  
-  res = ['Latest measurement at ' + str(data.iloc[index]['time'].strftime(timeformat)) + '\n']
-  el_data = kotibobot.electricity_price.load_ts_data()
-  current_price = kotibobot.electricity_price.current(el_data)
-  precentile    = kotibobot.electricity_price.precentile(el_data)
-  precentile_h  = kotibobot.electricity_price.precentile_interval(datetime.now().hour, datetime.now().hour, el_data)
-  res.append("el. price precentile : {:.2f} %".format(precentile*100,1))
-  res.append("el. price precentile hourly : {:.2f} %".format(precentile_h*100,1))
-  res.append("electricity price : {:.2f} snt/kWh".format(current_price))
-  for col in cols:
-    if not col in ['time','electricity price','el_price']:
-      if not math.isnan(data.iloc[-1][col]):
-        #res.append(col + ' : ' + str(data.iloc[-1][col]))
-        res.append("{} : {:.2f}".format(col, data.iloc[-1][col]))
-      else:
-        index = len(data.index)-1
-        while index > 0 and math.isnan(data.iloc[index][col]):
-          index = index - 1
-        #res.append(col + ' : ' + str(data.iloc[index][col]) + ' (timestamp: ' + str(data.iloc[index]['time'].strftime(timeformat)) + ')')
-        res.append("{} : {:.2f} (timestamp {})".format(col, data.iloc[index][col], str(data.iloc[index]['time'].strftime(timeformat))))
-  res.sort()
-  return '\n'.join(res)
-
-def latest_data_json():
+def latest_data_json(withTime = False):
   data = load_ts_data()
   cols = data.columns.values.tolist()
   res = json.loads("{}")
+  times = json.loads("{}")
+  times['LATEST'] = data.iloc[-1]['time']
   for col in cols:
     if not col == 'time':
       if not math.isnan(data.iloc[-1][col]):
         res[col] = data.iloc[-1][col]
+        times[col] = data.iloc[-1]['time']
       else:
-        index = len(data.index)-1
-        while index > 0 and math.isnan(data.iloc[index][col]):
-          index = index - 1
-        res[col] = data.iloc[index][col]
+        subdf = data.iloc[:][[col, 'time']]
+        subdf = subdf.dropna()
+        res[col] = subdf.iloc[-1][col]
+        times[col] = subdf.iloc[-1]['time']
+        
   el_data = kotibobot.electricity_price.load_ts_data()
+  res['electricity frequency'] = kotibobot.electricity_price.frequency()
   res['electricity price'] = kotibobot.electricity_price.current(el_data)
   res['electricity price precentile'] = kotibobot.electricity_price.precentile(el_data)
   res['electricity price precentile hourly'] = kotibobot.electricity_price.precentile_interval(datetime.now().hour, datetime.now().hour, el_data)
-  return res
+  if withTime:
+    return (res, times)
+  else:
+    return res
+
+def print_latest_data():
+  (data,times) = latest_data_json(True)
+  timeformat = '%-d.%-m. at %-H:%M'
+  
+  el_price  = data['electricity price']
+  el_prec   = data['electricity price precentile']*100
+  el_prec_h = data['electricity price precentile hourly']*100
+  el_freq = data['electricity frequency']
+  
+  res = ['Latest measurement on ' + str(times['LATEST'].strftime(timeformat)) + '\n']
+  res.append("el. price precentile : {:.2f} %".format(el_price))
+  res.append("el. price precentile hourly : {:.2f} %".format(el_prec))
+  res.append("electricity price : {:.2f} snt/kWh".format(el_prec_h))
+  res.append("el. frequency : {:.2f} Hz".format(el_freq))
+  
+  for col in data:
+    if not col in ['time','electricity price','electricity price precentile hourly','electricity price precentile','electricity frequency']:
+      if not times['LATEST'] == times[col]:
+        res.append("{} : {:.4G}".format(col, data[col]))
+      else:
+        res.append("{} : {:.4G} (on {})".format(col, data[col], str(times[col].strftime(timeformat))))
+  res.sort()
+  return '\n'.join(res)

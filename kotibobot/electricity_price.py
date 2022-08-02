@@ -1,10 +1,17 @@
 from datetime import date, datetime, timedelta
 import pandas as pd
 import numpy as np
+import time
+import requests
+import math
+import json
 from os.path import exists
 
 # https://github.com/kipe/nordpool
 from nordpool import elspot
+
+with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
+    koodit = json.load(json_file)
 
 '''
 from selenium import webdriver
@@ -74,6 +81,17 @@ def get():
 '''
 
 def get_forwards():
+  for i in range(120): # 120 * 120 sek = 4 h
+    try:
+      res = get_forwards2()
+      if not (res.isnull().values.any() or np.isinf(df).values.sum()>=1):
+        break
+    except:
+      'nothing here'
+    time.sleep(120.752345)
+  return res
+
+def get_forwards2():
   # Initialize class for fetching Elspot prices
   prices_spot = elspot.Prices()
   # Fetch hourly Elspot prices for Finland and print the resulting dictionary
@@ -115,3 +133,21 @@ def precentile_interval(h1, h2, df = load_ts_data()):
   df_below = df[df['electricity price']<=value]
   return len(df_below) / len(df)
 
+def duck_curve(df = load_ts_data()):
+  means = []
+  for h in range(24):
+    df_hour = df[df['time'].dt.hour==h]
+    df_hour = df_hour[~df_hour.isin([np.nan, np.inf, -np.inf]).any(1)]
+    means.append(df_hour.mean(numeric_only=True).iloc[0])
+  return means
+  
+def frequency():
+    TOKEN = koodit["fingrid"] # lateus96
+    # TOKEN = koodit["fingrid2"] lauri.a.jokinen
+    five_minutes = timedelta(minutes=80)
+    now = datetime.now() + five_minutes
+    before = datetime.now() - five_minutes
+    start = before.strftime("%Y-%m-%dT%HXXX%MXXX%S").replace('XXX','%3A') + '%2B' + "%02d" % math.floor(-time.timezone / 3600) + '%3A00'
+    end = now.strftime("%Y-%m-%dT%HXXX%MXXX%S").replace('XXX','%3A') +'%2B' + "%02d" % math.floor(-time.timezone / 3600) + '%3A00'
+    url2 = 'https://api.fingrid.fi/v1/variable/177/events/json?start_time=' + start + '&end_time=' + end
+    return requests.get(url2, headers={'x-api-key': TOKEN, 'Accept': 'application/json'}).json()[-1]['value']

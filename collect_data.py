@@ -28,9 +28,9 @@ def collect_and_save():
       eq3_reading = kotibobot.eq3.to_json(name_to_mac[eq3])
       new_data[eq3 + " target"] = np.half(eq3_reading['target']) # conversion to half-precision float
       new_data[eq3 + " valve"]  = np.half(eq3_reading['valve'])
-      new_data[eq3 + " vacationmode"]  = np.uint8(eq3_reading['vacationmode'])
-      new_data[eq3 + " boostmode"]  = np.uint8(eq3_reading['boostmode'])
-      new_data[eq3 + " automode"]  = np.uint8(eq3_reading['automode'])
+      new_data[eq3 + " vacationmode"]  = np.half(eq3_reading['vacationmode'])
+      new_data[eq3 + " boostmode"]  = np.half(eq3_reading['boostmode'])
+      new_data[eq3 + " automode"]  = np.half(eq3_reading['automode'])
       
     for sensor in mi_in_rooms[room]:
       mi_reading = kotibobot.mi.to_json(name_to_mac[sensor])
@@ -40,7 +40,7 @@ def collect_and_save():
   new_data["outside temp"] = np.single(kotibobot.weather.temp())
   new_data["outside humidity"] = np.half(kotibobot.weather.humidity())
   
-  new_data["olkkari power socket"] = np.half(kotibobot.hs110.ufox_power())
+  #new_data["olkkari power socket"] = np.half(kotibobot.hs110.ufox_power())
   
   new_df = pd.json_normalize(new_data)
   
@@ -73,7 +73,7 @@ telegram_message('juu?')
 '''
 t = datetime.now()
 collect_and_save()
-kotibobot.regression.do(['outside temp', 'olkkari power socket'], 'olkkarin lämpömittari temp', [])
+#kotibobot.regression.do(['outside temp', 'olkkari power socket'], 'olkkarin lämpömittari temp', [])
 kotibobot.plotting.main_function()
 
 #kotibobot.hs110.ufox_automation()

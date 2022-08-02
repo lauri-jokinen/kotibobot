@@ -28,14 +28,22 @@ def makkari_humidifier_command(string):
 
 def tyokkari_humidifier_command(string):
   return plug_command(string, 'työkkärin_kostutin')
-
+'''
 def ufox_is_on():
   try:
     res = float(plug_command('energy', 'ufox').split('power_mw":')[1].split(',')[0])
-    return int(res > 50*1000) # milli Watts
+    return (res > 1*1000) # milli Watts
   except:
-    return -1
+    return True # weird precaution. do something about this
+'''
 
+def ufox_is_on():
+  try:
+    res = int(plug_command('energy', 'ufox').split('relay_state":')[1].split(',')[0]) == 1
+  except:
+    res = True
+  return res
+    
 
 def ufox_power():
   try:
