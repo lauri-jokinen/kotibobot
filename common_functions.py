@@ -1,6 +1,7 @@
 # - *- coding: utf- 8 - *-
 import subprocess # ubuntu bash
 
+
 def restart_bluetooth():
   try:
     s = ['sudo', '/etc/init.d/bluetooth', 'restart']
@@ -19,4 +20,3 @@ def remove_extra_spaces(string): # and remove tabs!
     else:
       i = i+1
   return "".join((" ".join(arr)).split("\t"))
-

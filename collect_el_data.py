@@ -15,7 +15,7 @@ import kotibobot.electricity_price
 def collect_and_save():
   
   new_df = kotibobot.electricity_price.get_forwards()
-  
+  print(new_df)
   file_name = '/home/lowpaw/Downloads/kotibobot/el-price_' + datetime.today().strftime("%Y") + '.pkl'
   
   if exists(file_name):
@@ -24,8 +24,8 @@ def collect_and_save():
   else:
     df = new_df
   
-  
-  df = df[df['electricity price'].notna()]
+  df.replace([np.inf, -np.inf], np.nan, inplace=True) # replace +-inf with nan
+  df = df[df['electricity price'].notna()] # remove nans
   df['time'] = df['time'].dt.floor('H')
   
   df = df.iloc[::-1]

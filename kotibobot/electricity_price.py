@@ -8,7 +8,8 @@ import json
 from os.path import exists
 
 # https://github.com/kipe/nordpool
-from nordpool import elspot
+#from nordpool import elspot
+import kotibobot.requests_robust
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
@@ -83,14 +84,40 @@ def get():
 def get_forwards():
   for i in range(120): # 120 * 120 sek = 4 h
     try:
-      res = get_forwards2()
-      if not (res.isnull().values.any() or np.isinf(df).values.sum()>=1):
-        break
+      res = get_forwards3()
+      break
     except:
       'nothing here'
     time.sleep(120.752345)
   return res
 
+def get_forwards3():
+  url = "https://www.nordpoolgroup.com/api/marketdata/page/10?currency=,,,EUR"
+  r = kotibobot.requests_robust.get_url(url).json()['data']
+  # check if today's data
+  today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+  if not (datetime.strptime(r['DateUpdated'][0:10], '%Y-%m-%d') == today):
+    raise Exception("Forward data is not yet published; data date is yesterday")
+  
+  # read data
+  r = r['Rows']
+  prices = []
+  for row in r:
+      for col in row['Columns']:
+          if col['Name'] == 'FI':
+              prices.append(float(col['Value'].replace(',','.'))*1.24*0.1) # tax 24 % and conversion EUR/MW to cent/kW
+  df = pd.DataFrame()
+  df['electricity price'] = np.single(prices[0:24])
+  
+  # Create time column
+  dates = []
+  for p in range(24):
+      dates.append(today + timedelta(hours = p+24))
+  df['time'] = dates
+  df['time'] = df['time'].dt.tz_localize('CET').dt.tz_convert('Europe/Helsinki').dt.tz_localize(None)
+  print(df)
+  return df
+'''
 def get_forwards2():
   # Initialize class for fetching Elspot prices
   prices_spot = elspot.Prices()
@@ -101,7 +128,7 @@ def get_forwards2():
   df['electricity price'] = np.single(df['value'] * 1.24 * 0.1) # tax 24 % and conversion EUR/MW to cent/kW
   df = df[['time','electricity price']]
   return df
-
+'''
 def load_ts_data():
   df = pd.DataFrame()
   year = datetime.now().year + 1
@@ -140,14 +167,21 @@ def duck_curve(df = load_ts_data()):
     df_hour = df_hour[~df_hour.isin([np.nan, np.inf, -np.inf]).any(1)]
     means.append(df_hour.mean(numeric_only=True).iloc[0])
   return means
-  
-def frequency():
+
+def frequency(full_response = False):
+  try:
     TOKEN = koodit["fingrid"] # lateus96
     # TOKEN = koodit["fingrid2"] lauri.a.jokinen
-    five_minutes = timedelta(minutes=80)
+    five_minutes = timedelta(minutes=130)
     now = datetime.now() + five_minutes
     before = datetime.now() - five_minutes
     start = before.strftime("%Y-%m-%dT%HXXX%MXXX%S").replace('XXX','%3A') + '%2B' + "%02d" % math.floor(-time.timezone / 3600) + '%3A00'
     end = now.strftime("%Y-%m-%dT%HXXX%MXXX%S").replace('XXX','%3A') +'%2B' + "%02d" % math.floor(-time.timezone / 3600) + '%3A00'
     url2 = 'https://api.fingrid.fi/v1/variable/177/events/json?start_time=' + start + '&end_time=' + end
-    return requests.get(url2, headers={'x-api-key': TOKEN, 'Accept': 'application/json'}).json()[-1]['value']
+    resp = kotibobot.requests_robust.get_url(url2, {'x-api-key': TOKEN, 'Accept': 'application/json'})
+    if full_response:
+      return resp.json()[-1]
+    else:
+      return resp.json()[-1]['value']
+  except:
+    return float('nan')

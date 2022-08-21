@@ -4,12 +4,10 @@ import pandas as pd
 import numpy as np
 
 import kotibobot
+#import kotibobot.eq3, kotibobot.mi, kotibobot.weather, kotibobot.hs110, kotibobot.plotting, kotibobot.regression, kotibobot.command_queue, kotibobot.thermostat_offset_controller
+#from kotibobot import *
 from house import *
 from common_functions import *
-
-#import kotibobot.thermostat_offset_controller # sisältyy kotibobot-pakettiin? eiks juu?
-
-#import requests, urllib.parse # Needed for telegram
 
 def collect_and_save():
   new_data = json.loads("{}")
@@ -73,7 +71,7 @@ telegram_message('juu?')
 '''
 t = datetime.now()
 collect_and_save()
-#kotibobot.regression.do(['outside temp', 'olkkari power socket'], 'olkkarin lämpömittari temp', [])
+#kotibobot.regression.do(['outside temp', 'olkkarin nuppi target', 'keittiön nuppi target'], 'olkkarin lämpömittari temp', [])
 kotibobot.plotting.main_function()
 
 #kotibobot.hs110.ufox_automation()

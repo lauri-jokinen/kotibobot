@@ -12,6 +12,7 @@ import matplotlib.dates as mdates # helps to format dates in x-axis
 import math
 import multiprocessing as mp # asychronous plotting
 from os.path import exists
+from scipy import interpolate
 
 from house import *
 from common_functions import *
@@ -65,6 +66,14 @@ def load_ts_data():
 def figure_size():
   return (10,6.25)
 
+def outside_hum_to_inside_hum(temp_in, temp_out, hum_out):
+  temps =            [-50,   -20,  -10,     0,   5,  10,    11,    12,    13,    14,    15,   20, 25,   30, 37,   40,   50]
+  satur_vapor_dens = [0.039, 0.89, 2.36, 4.85, 6.8, 9.4, 10.01, 10.66, 11.35, 12.07, 12.83, 17.3, 23, 30.4, 44, 51.1, 82.4]
+  f = interpolate.interp1d(temps, satur_vapor_dens, kind='quadratic')
+  SVD_in = f(temp_in)
+  SVD_out = f(temp_out)
+  return hum_out * SVD_out / SVD_in
+
 def temp_hum_inside_outside_forecast(data_orig, a, make_plot = True):
   plt.ioff()
   filename = 'temp_hum_in_out_forecast.svg'
@@ -99,6 +108,8 @@ def temp_hum_inside_outside_forecast(data_orig, a, make_plot = True):
   forecast = forecast[forecast['time'] > t_start_forecast]
   forecast = forecast[forecast['time'] < t_end_forecast]
   
+  forecast['humidity converted'] = outside_hum_to_inside_hum(latest_data_json()['olkkarin lämpömittari temp'], forecast['temp'], forecast['humidity'])
+  
   fig, ax1 = plt.subplots(1,1,figsize=figure_size())
   
   data.plot(x="time",y='inside temp', alpha=0.7, color='r', ax=ax1)
@@ -118,6 +129,7 @@ def temp_hum_inside_outside_forecast(data_orig, a, make_plot = True):
   humidity_65 = pd.DataFrame({'time':[t_start, t_end_forecast], '65 %':[65.0,65.0]})
   humidity_65.plot(x='time',y='65 %', color = 'b', ax=ax2, alpha = 0.4, linewidth=0.75)
   forecast.plot(x='time',y='humidity',alpha=0.7, color='b', linestyle = ':', ax=ax2)
+  forecast.plot(x='time',y='humidity converted',alpha=0.3, color='b', linestyle = ':', ax=ax2)
   plt.ylim([-2, 102])
   #ax1.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
   
@@ -568,12 +580,10 @@ def electricity_price_days(data_orig, a, make_plot = True):
   price = "electricity price"
   
   fig, ax = plt.subplots(1,1,figsize=figure_size())
-  data2.plot(x="time",y=price,color='b',alpha=0.8, ax=ax)
-  #plt.ylim([-2, 102])
+  data2.plot(x="time",y=price,color='b',alpha=0.8, ax=ax) # today, past
   plt.ylabel('          c/kWh',rotation=0)
   
-  data1.plot(x="time",y=price,linestyle='dashed',ax=ax,color='b',alpha=0.6) # ax=ax laittaa samaan kuvaan
-  #data0.plot(x="time",y=price,linestyle=':',ax=ax,color='b',alpha=0.6) # ax=ax laittaa samaan kuvaan
+  #data1.plot(x="time",y=price,linestyle='dashed',ax=ax,color='b',alpha=0.6) # ax=ax laittaa samaan kuvaan; yesterday
   
   if not data3.empty:
     data3.plot(x="time",y=price,ax=ax,color='r',alpha=0.8) # ax=ax laittaa samaan kuvaan
@@ -583,8 +593,8 @@ def electricity_price_days(data_orig, a, make_plot = True):
   duck = kotibobot.electricity_price.duck_curve(data_orig)
   df_duck = pd.DataFrame()
   df_duck['time'] = data1['time']
-  df_duck['duck'] = duck
-  df_duck.plot(x="time",y='duck',ax=ax,color='k',alpha=0.8) # ax=ax laittaa samaan kuvaan
+  df_duck['duck curve'] = duck
+  df_duck.plot(x="time",y='duck curve',ax=ax,color='k',alpha=0.8) # ax=ax laittaa samaan kuvaan
   
   ax.set_xlabel('')
   
@@ -658,20 +668,15 @@ def print_latest_data():
   (data,times) = latest_data_json(True)
   timeformat = '%-d.%-m. at %-H:%M'
   
-  el_price  = data['electricity price']
-  el_prec   = data['electricity price precentile']*100
-  el_prec_h = data['electricity price precentile hourly']*100
-  el_freq = data['electricity frequency']
-  
   res = ['Latest measurement on ' + str(times['LATEST'].strftime(timeformat)) + '\n']
-  res.append("el. price precentile : {:.2f} %".format(el_price))
-  res.append("el. price precentile hourly : {:.2f} %".format(el_prec))
-  res.append("electricity price : {:.2f} snt/kWh".format(el_prec_h))
-  res.append("el. frequency : {:.2f} Hz".format(el_freq))
+  res.append("el. price precentile : {:.2f} %".format(       data['electricity price precentile']*100))
+  res.append("el. price precentile hourly : {:.2f} %".format(data['electricity price precentile hourly']*100))
+  res.append("electricity price : {:.2f} snt/kWh".format(    data['electricity price']))
+  res.append("el. frequency : {:.2f} Hz".format(             data['electricity frequency']))
   
   for col in data:
     if not col in ['time','electricity price','electricity price precentile hourly','electricity price precentile','electricity frequency']:
-      if not times['LATEST'] == times[col]:
+      if times['LATEST'] == times[col]:
         res.append("{} : {:.4G}".format(col, data[col]))
       else:
         res.append("{} : {:.4G} (on {})".format(col, data[col], str(times[col].strftime(timeformat))))

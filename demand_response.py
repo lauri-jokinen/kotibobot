@@ -5,6 +5,8 @@ from datetime import date, datetime, timedelta
 
 import requests, urllib.parse, json, math, time # telegram
 
+from common_functions import telegram_message
+
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
     
@@ -21,30 +23,7 @@ else:
   df['last_time_on'] = [datetime.now()]
   df.to_pickle(file_name)
 
-def frequency():
-    TOKEN = koodit["fingrid"] # lateus96
-    # TOKEN = koodit["fingrid2"] lauri.a.jokinen
-    five_minutes = timedelta(minutes=80)
-    now = datetime.now() + five_minutes
-    before = datetime.now() - five_minutes
-    start = before.strftime("%Y-%m-%dT%HXXX%MXXX%S").replace('XXX','%3A') + '%2B' + "%02d" % math.floor(-time.timezone / 3600) + '%3A00'
-    end = now.strftime("%Y-%m-%dT%HXXX%MXXX%S").replace('XXX','%3A') +'%2B' + "%02d" % math.floor(-time.timezone / 3600) + '%3A00'
-    url2 = 'https://api.fingrid.fi/v1/variable/177/events/json?start_time=' + start + '&end_time=' + end
-    return requests.get(url2, headers={'x-api-key': TOKEN, 'Accept': 'application/json'}).json()[-1]
-
-def telegram_message(html_content): # import requests, urllib.parse
-  chat_id = '131994588' # Lapa
-  url = 'https://api.telegram.org/bot'
-  url = url + koodit["L-bot"]
-  url = url + '/sendMessage?chat_id='
-  url = url + chat_id
-  url = url + '&text='
-  url = url + urllib.parse.quote(html_content)
-  url = url + '&parse_mode=html'
-  response = requests.get(url)
-  return response
-
-#telegram_message(str(frequency()))
+#telegram_message(str(kotibobot.electricity_price.frequency(True)))
 
 minutes_on = 9;
 
@@ -55,18 +34,19 @@ if df['last_time_on'].iloc[-1] + timedelta(minutes = minutes_on + 2.5) < datetim
   df['last_time_on'] = [datetime.now()]
   df.to_pickle(file_name)
   freq = kotibobot.electricity_price.frequency()
-  telegram_message('liikaa aikaa pois {}'.format(freq))
+  #telegram_message('liikaa aikaa pois {}'.format(freq))
   exit()
 
 try:
   freq = kotibobot.electricity_price.frequency()
-  freq >= 50.0
+  if math.isnan(freq):
+    raise ValueError('Frequency is NaN.')
 except:
   kotibobot.hs110.ufox_command('on')
   kotibobot.hs110.ufox_command('on')
   df['last_time_on'] = [datetime.now()]
   df.to_pickle(file_name)
-  telegram_message('jotain meni vikaan')
+  #telegram_message('jotain meni vikaan')
 
 #print(freq)
 #print(kotibobot.hs110.ufox_is_on())

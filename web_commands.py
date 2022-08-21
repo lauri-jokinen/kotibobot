@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import dateutil.parser # parse ISO
 import json
 import requests
-import kotibobot.command_queue
+import kotibobot
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
@@ -49,7 +49,10 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes("<p>This is an example web server.</p>", "utf-8"))
         self.wfile.write(bytes("</body></html>", "utf-8"))
         if self.path != '/favicon.ico':
-          command_array = commands[''.join(self.path.split('/'))]
+          com = ''.join(self.path.split('/'))
+          if com != 'auto':
+            kotibobot.hs110.ufox_command('off')
+          command_array = commands[com]
           for c in command_array:
             co = replace_hours_with_time(c)
             res = kotibobot.eq3.command_human(co)
