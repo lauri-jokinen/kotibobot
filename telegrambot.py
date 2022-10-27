@@ -213,6 +213,9 @@ def switchbot_push(update, context):
     update.message.reply_text("You are not authorized.")
     return
   update.message.reply_text(kotibobot.switchbot.press())
+  
+#def prices_of_running_appliance(update, context):
+#  update.message.reply_text(kotibobot.electricity_price.price_of_running_appliance_human(3, 24, 0.88))
 
 def main():
   # Create Updater object and attach dispatcher to it
@@ -240,6 +243,7 @@ def main():
   vahti_print_handler = CommandHandler('printvahti', vahti_print)
   vahti_wipe_handler = CommandHandler('wipevahti', vahti_wipe)
   switchbot_handler = CommandHandler('cool', switchbot_push)
+  #tiskikone_handler = CommandHandler('tiskikone', prices_of_running_appliance)
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
@@ -260,6 +264,7 @@ def main():
   dispatcher.add_handler(vahti_print_handler)
   dispatcher.add_handler(vahti_wipe_handler)
   dispatcher.add_handler(switchbot_handler)
+  #dispatcher.add_handler(tiskikone_handler)
 
   # Start the bot
   updater.start_polling()

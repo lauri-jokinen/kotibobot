@@ -1,15 +1,9 @@
 # - *- coding: utf- 8 - *-
-import time
 from datetime import datetime, timedelta
-# packages for time series
-#import dateutil.parser
-import matplotlib.pyplot as plt
-#import numpy as np
 import pandas as pd
-#from matplotlib import pyplot
-import matplotlib
+import math, time, matplotlib
 import matplotlib.dates as mdates # helps to format dates in x-axis
-import math
+import matplotlib.pyplot as plt
 import multiprocessing as mp # asychronous plotting
 from os.path import exists
 from scipy import interpolate
@@ -55,11 +49,11 @@ def load_ts_data():
   
   file_name = '/home/lowpaw/Downloads/kotibobot/{}.pkl'.format(last_month)
   if exists(file_name):
-    df = df.append(pd.read_pickle(file_name), sort=False, ignore_index=True)
+    df = pd.concat([df, pd.read_pickle(file_name)], sort=False, ignore_index=True)
   
   file_name = '/home/lowpaw/Downloads/kotibobot/{}.pkl'.format(this_month)
   if exists(file_name):
-    df = df.append(pd.read_pickle(file_name), sort=False, ignore_index=True)
+    df = pd.concat([df, pd.read_pickle(file_name)], sort=False, ignore_index=True)
     
   return df
 
@@ -102,19 +96,21 @@ def temp_hum_inside_outside_forecast(data_orig, a, make_plot = True):
   data['inside temp'] = data[temps].mean(axis=1)
   data['inside humidity'] = data[humidities].mean(axis=1)
   
-  forecast = kotibobot.weather.forecast()
-  t_start_forecast = datetime.now() - timedelta(minutes = 1) # takes current time into account
-  t_end_forecast = datetime.now() + timedelta(hours = 24*2)
-  forecast = forecast[forecast['time'] > t_start_forecast]
-  forecast = forecast[forecast['time'] < t_end_forecast]
+  #forecast = kotibobot.weather.forecast()
+  #t_start_forecast = datetime.now() - timedelta(minutes = 1) # takes current time into account
+  #t_end_forecast = datetime.now() + timedelta(hours = 24*2)
+  #forecast = forecast[forecast['time'] > t_start_forecast]
+  #forecast = forecast[forecast['time'] < t_end_forecast]
   
-  forecast['humidity converted'] = outside_hum_to_inside_hum(latest_data_json()['olkkarin lämpömittari temp'], forecast['temp'], forecast['humidity'])
+  #forecast['humidity converted'] = outside_hum_to_inside_hum(latest_data_json()['olkkarin lämpömittari temp'], forecast['temp'], forecast['humidity'])
+  latest_data = latest_data_json()
+  data['outside humidity converted'] = outside_hum_to_inside_hum(latest_data['olkkarin lämpömittari temp'], data['outside temp'], data['outside humidity'])
   
   fig, ax1 = plt.subplots(1,1,figsize=figure_size())
   
   data.plot(x="time",y='inside temp', alpha=0.7, color='r', ax=ax1)
   data.plot(x="time",y='outside temp', alpha=0.7,color='r',linestyle='dashed', ax=ax1)
-  forecast.plot(x='time',y='temp',alpha=0.7, color='r', linestyle = ':', ax=ax1)
+  #forecast.plot(x='time',y='temp',alpha=0.7, color='r', linestyle = ':', ax=ax1)
   plt.ylabel('°C   ',rotation=0)
   
   lim = list(plt.ylim())
@@ -125,25 +121,28 @@ def temp_hum_inside_outside_forecast(data_orig, a, make_plot = True):
   
   ax2 = ax1.twinx()
   data.plot(x="time",y='olkkarin lämpömittari humidity',color='b', ax=ax2, alpha=0.7) # ax=ax laittaa samaan kuvaan secondary_y=True,
-  data.plot(x="time",y='outside humidity',color='b',linestyle='dashed', ax=ax2, alpha=0.7)
-  humidity_65 = pd.DataFrame({'time':[t_start, t_end_forecast], '65 %':[65.0,65.0]})
-  humidity_65.plot(x='time',y='65 %', color = 'b', ax=ax2, alpha = 0.4, linewidth=0.75)
-  forecast.plot(x='time',y='humidity',alpha=0.7, color='b', linestyle = ':', ax=ax2)
-  forecast.plot(x='time',y='humidity converted',alpha=0.3, color='b', linestyle = ':', ax=ax2)
+  #data.plot(x="time",y='outside humidity',color='b',linestyle='dashed', ax=ax2, alpha=0.7)
+  #humidity_65 = pd.DataFrame({'time':[t_start, t_end_forecast], '65 %':[65.0,65.0]})
+  #humidity_65.plot(x='time',y='65 %', color = 'b', ax=ax2, alpha = 0.4, linewidth=0.75)
+  #forecast.plot(x='time',y='humidity',alpha=0.7, color='b', linestyle = ':', ax=ax2)
+  #forecast.plot(x='time',y='humidity converted',alpha=0.3, color='b', linestyle = ':', ax=ax2)
+  #data.plot(x='time',y='outside humidity converted',alpha=0.3, color='b', linestyle = ':', ax=ax2)
+  data.plot(x="time",y='outside humidity converted',color='b',linestyle='dashed', ax=ax2, alpha=0.3)
   plt.ylim([-2, 102])
+  #plt.xlim([datetime.now() - timedelta(hours=10*24), datetime.now() + timedelta(hours=10*24)])
   #ax1.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
   
-  ax1.yaxis.grid(True, which='major', alpha = 0.2)
-  ax1.yaxis.grid(True, which='minor')
-  ax1.xaxis.grid(True, alpha=0.2)
+  #ax1.yaxis.grid(True, which='major', alpha = 0.2)
+  #ax1.yaxis.grid(True, which='minor')
+  #ax1.xaxis.grid(True, alpha=0.2)
   plt.ylabel('%',rotation=0)
   
   ax1.set_xlabel('')
   
-  myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
+  #myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
   #plt.xticks(rotation=0, ha='center', ax=ax1) ###########
   #ax1.set_xticklabels(rotation=0, ha='center', ax=ax1) ###########
-  ax1.xaxis.set_major_formatter(myFmt)
+  #ax1.xaxis.set_major_formatter(myFmt)
   #plt.show()
   
   #plt.savefig('/var/www/html/kotibobot/' + filename)
@@ -205,7 +204,7 @@ def temp_48_all_rooms(data_orig, a, make_plot = True):
   
   myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
   plt.xticks(rotation=0, ha='center')
-  ax.xaxis.set_major_formatter(myFmt)
+  #ax.xaxis.set_major_formatter(myFmt)
   ax.yaxis.tick_right()
   ax.yaxis.set_label_position("right")
   
@@ -246,7 +245,7 @@ def humidity_48_all_rooms(data_orig, a, make_plot = True):
   
   myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
   plt.xticks(rotation=0, ha='center')
-  ax.xaxis.set_major_formatter(myFmt)
+  #ax.xaxis.set_major_formatter(myFmt)
   ax.yaxis.tick_right()
   ax.yaxis.set_label_position("right")
   
@@ -277,7 +276,7 @@ def temp_48(room, data_orig, a, make_plot = True):
   targets = []
   for eq3 in eq3_in_rooms[room]:
     targets.append(eq3 + " target")
-    data[eq3 + " target"] = data[eq3 + " target"] + hard_offset
+    data[eq3 + " target"] = data[eq3 + " target"] + hard_offset[room]
       
   temps = []
   for sensor in mi_in_rooms[room]:
@@ -311,7 +310,7 @@ def temp_48(room, data_orig, a, make_plot = True):
   myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
   #plt.xticks(rotation=0, ha='center', ax=ax1) ###########
   #ax1.set_xticklabels(rotation=0, ha='center', ax=ax1) ###########
-  ax1.xaxis.set_major_formatter(myFmt)
+  #ax1.xaxis.set_major_formatter(myFmt)
   #plt.show()
   
   
@@ -380,7 +379,7 @@ def temp_offset(room, data_orig, a, make_plot = True):
   
   myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
   
-  ax1.xaxis.set_major_formatter(myFmt)
+  #ax1.xaxis.set_major_formatter(myFmt)
   
   #plt.show()
   
@@ -433,7 +432,7 @@ def temp_days(room, data_orig, a, make_plot = True):
   ax.xaxis.grid(True, alpha=0.2)
   
   myFmt = mdates.DateFormatter('%-H:%M')
-  ax.xaxis.set_major_formatter(myFmt)
+  #ax.xaxis.set_major_formatter(myFmt) # TODO (sama alla) https://stackoverflow.com/questions/33743394/matplotlib-dateformatter-for-axis-label-not-working
   ax.yaxis.tick_right()
   ax.yaxis.set_label_position("right")
   plt.xticks(rotation=0, ha='center')
@@ -483,8 +482,8 @@ def humidity_days(room, data_orig, a, make_plot = True):
   ax.set_xlabel('')
   
   myFmt = mdates.DateFormatter('%-H:%M')
-  ax.xaxis.set_major_formatter(myFmt)
-  ax.xaxis.grid(True, alpha=0.2)
+  #ax.xaxis.set_major_formatter(myFmt) # TODO
+  #ax.xaxis.grid(True, alpha=0.2) # TODO
   ax.yaxis.grid(True, alpha=0.2)
   ax.yaxis.tick_right()
   ax.yaxis.set_label_position("right")
@@ -530,7 +529,7 @@ def hs110_days(data_orig, a, make_plot = True):
   ax.set_xlabel('')
   
   myFmt = mdates.DateFormatter('%-H:%M')
-  ax.xaxis.set_major_formatter(myFmt)
+  #ax.xaxis.set_major_formatter(myFmt)
   ax.xaxis.grid(True, alpha=0.2)
   ax.yaxis.grid(True, alpha=0.2)
   ax.yaxis.tick_right()
@@ -599,7 +598,7 @@ def electricity_price_days(data_orig, a, make_plot = True):
   ax.set_xlabel('')
   
   myFmt = mdates.DateFormatter('%-H:%M')
-  ax.xaxis.set_major_formatter(myFmt)
+  #ax.xaxis.set_major_formatter(myFmt)
   ax.xaxis.grid(True, alpha=0.2)
   ax.yaxis.grid(True, alpha=0.2)
   ax.yaxis.tick_right()

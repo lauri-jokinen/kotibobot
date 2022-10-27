@@ -86,8 +86,8 @@ def get_forwards():
     try:
       res = get_forwards3()
       break
-    except:
-      'nothing here'
+    except Exception as e:
+      print(e)
     time.sleep(120.752345)
   return res
 
@@ -95,7 +95,7 @@ def get_forwards3():
   url = "https://www.nordpoolgroup.com/api/marketdata/page/10?currency=,,,EUR"
   r = kotibobot.requests_robust.get_url(url).json()['data']
   # check if today's data
-  today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+  today = (datetime.now() - timedelta(hours=0)).replace(hour=0, minute=0, second=0, microsecond=0)
   if not (datetime.strptime(r['DateUpdated'][0:10], '%Y-%m-%d') == today):
     raise Exception("Forward data is not yet published; data date is yesterday")
   
@@ -104,9 +104,13 @@ def get_forwards3():
   prices = []
   for row in r:
       for col in row['Columns']:
-          if col['Name'] == 'FI':
-              prices.append(float(col['Value'].replace(',','.'))*1.24*0.1) # tax 24 % and conversion EUR/MW to cent/kW
+          if col['Name'] == 'FI' and len(prices) < 24:
+              if datetime.now().month == 12:
+                prices.append(float(col['Value'].replace(',','.'))*1.10*0.1) # tax 10 % and conversion EUR/MW to cent/kW
+              else:
+                prices.append(float(col['Value'].replace(',','.'))*1.24*0.1) # tax 24 % and conversion EUR/MW to cent/kW
   df = pd.DataFrame()
+  
   df['electricity price'] = np.single(prices[0:24])
   
   # Create time column
@@ -136,7 +140,8 @@ def load_ts_data():
     file_name = '/home/lowpaw/Downloads/kotibobot/el-price_' + str(year - i) + '.pkl'
     if exists(file_name):
       df_year = pd.read_pickle(file_name)
-      df = df_year.append(df, sort=False, ignore_index=True)
+      #df = df_year.append(df, sort=False, ignore_index=True)
+      df = pd.concat([df,df_year], sort=False, ignore_index=True)
   df = df.drop_duplicates(subset=['time'])
   return df[df['time'] > datetime.now() - timedelta(hours = 8765.81)]
 
@@ -154,18 +159,56 @@ def precentile(df = load_ts_data()):
   return len(df_below) / len(df)
 
 def precentile_interval(h1, h2, df = load_ts_data()):
+  value = current(df)
   df = df[df['time'].dt.hour>=h1]
   df = df[df['time'].dt.hour<=h2]
-  value = current(df)
   df_below = df[df['electricity price']<=value]
   return len(df_below) / len(df)
+'''
+def price_of_running_appliance(hours, hours_ahead):
+  df = load_ts_data()
+  now = datetime.now().replace(minute=0, second=0, microsecond=0)
+  fraction = datetime.now().minute / 60
+  prices = []
+  for q in range(hours_ahead):
+    prices.append(0.0)
+    for p in range(hours+1):
+      then = now + timedelta(hours=p+q)
+      price_then = df[df['time']==then]['electricity price'].values
+      if len(price_then) == 1:
+        price_then = price_then[0]
+        if p == 0:
+          prices[-1] = prices[-1] + price_then*(1-fraction)
+        elif p == hours:
+          prices[-1] = prices[-1] + price_then*(fraction)
+        else:
+          prices[-1] = prices[-1] + price_then
+      else:
+        prices[-1] = float('nan')
+  # Normalize
+  #for q in range(len(prices)-1):
+  #  prices[q+1] = prices[q+1] / prices[0]
+  #prices[0] = 1
+  return prices
+
+def price_of_running_appliance_human(hours, hours_ahead, kWh):
+  prices = price_of_running_appliance(hours, hours_ahead)
+  prices_nonan = np.array(prices)
+  prices_nonan[np.isnan(prices_nonan)] = float('inf')
+  min_ind = np.argmin(np.array(prices_nonan))
+  res = []
+  for q in range(min_ind+1):
+    if not math.isnan(prices[q]):
+      res.append('{}h : {:.2f} snt'.format(q,prices[q]/hours*kWh).replace('.',','))
+  return '\n'.join(res)
+'''
 
 def duck_curve(df = load_ts_data()):
   means = []
   for h in range(24):
     df_hour = df[df['time'].dt.hour==h]
     df_hour = df_hour[~df_hour.isin([np.nan, np.inf, -np.inf]).any(1)]
-    means.append(df_hour.mean(numeric_only=True).iloc[0])
+    means.append(df_hour.median(numeric_only=True).iloc[0])
   return means
 
 def frequency(full_response = False):

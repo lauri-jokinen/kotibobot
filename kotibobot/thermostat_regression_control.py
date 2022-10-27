@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import linprog
 from datetime import datetime, timedelta, date
 
-import kotibobot.weather, kotibobot.schedule
+import kotibobot.weather, kotibobot.schedule, kotibobot.regression
 from house import *
 
 def do():
@@ -10,10 +10,21 @@ def do():
   eq3 = rooms['olkkari']['eq3'][0]
   print(eq3)
   Ti0 = kotibobot.plotting.latest_data_json()['olkkarin lämpömittari temp']
-  gamma = 1; alpha = 0.01; beta = 24.2;
+  
+  #do(x_names, y_name, binary_attributes)
+  (attributes, gamma, sigma, means) = kotibobot.regression.do(['outside temp', 'olkkarin nuppi target'], 'olkkarin lämpömittari temp', [])
+  beta = attributes[0]; alpha = attributes[1]
+  print(attributes)
+  print(sigma)
+  print(gamma)
+  
+  if alpha == 0.0:
+    print('alpha is zero; the problem is not controllable')
+    alpha = 0.1
+    #return
   
   # number of ten minute things
-  n = 4;
+  n = 6*24;
 
   # format outside temperatures to corret vector form
   outside_temps = kotibobot.weather.forecast()
@@ -36,6 +47,11 @@ def do():
     m[p] = kotibobot.schedule.read(schedule[eq3][kotibobot.schedule.everyday[weekday]],time)
   #print(m)
   
+  # vector s = [1,...,n]
+  s = np.zeros(n)
+  for p in range(n):
+    s[p] = p+1
+  
   # vector g
   g = np.zeros(n)
   for p in range(n):
@@ -50,11 +66,17 @@ def do():
   #print(G)
   
   A = -alpha * G
-  b = -(m - g * Ti0 - beta * G @ T_o)
+  b = -(m - g * Ti0 - beta * G @ T_o - sigma*s)
   p = np.ones(n)
-  bounds = (0.0, 30.0)
+  bounds = (5.0, 30.0) # ilman boundseja TAI ilman Ax<=b:tä homma ratkeaa aina.
   res = linprog(p, A, b, bounds=bounds)
+  
+  while 'nfeasib' in res.message:
+    b = b + 1
+    print('infeasible...')
+    res = linprog(p, A, b, bounds=bounds)
   print('Optimal value:', round(res.fun, ndigits=2),
       '\nx values:', res.x,
       '\nNumber of iterations performed:', res.nit,
       '\nStatus:', res.message)
+  return res.x[0]

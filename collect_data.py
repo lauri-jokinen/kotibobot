@@ -46,7 +46,7 @@ def collect_and_save():
   
   try:
     df = pd.read_pickle(file_name)
-    df = df.append(new_df, sort=False, ignore_index=True)
+    df = pd.concat([df, new_df], sort=False, ignore_index=True)
   except:
     df = new_df
     new_file = True
@@ -69,19 +69,18 @@ def telegram_message(html_content): # import requests, urllib.parse
 
 telegram_message('juu?')
 '''
-t = datetime.now()
 collect_and_save()
-#kotibobot.regression.do(['outside temp', 'olkkarin nuppi target', 'keittiön nuppi target'], 'olkkarin lämpömittari temp', [])
 kotibobot.plotting.main_function()
 
 #kotibobot.hs110.ufox_automation()
 #kotibobot.hs110.makkari_humidifier_automation()
 #kotibobot.hs110.tyokkari_humidifier_automation()
 
-#kotibobot.thermostat_offset_controller.apply_control()
-#kotibobot.command_queue.do()
-restart_bluetooth()
+kotibobot.thermostat_offset_controller.apply_control()
+kotibobot.command_queue.do()
 
+#print(restart_bluetooth())
+#kotibobot.regression.do(['outside temp', 'työkkärin nuppi valve'], 'työkkärin lämpömittari temp', []) #'keittiön nuppi target'
 
 print('jii')
 

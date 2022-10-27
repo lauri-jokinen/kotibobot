@@ -11,7 +11,7 @@ from kotibobot.command_queue import remove_append_vacation as remove_append_vaca
 
 def command(string):
   s = ['/home/lowpaw/Downloads/eq3/eq3.exp', 'hci1'] + string.split(' ')
-  res = subprocess.run(s, stdout=subprocess.PIPE)
+  res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 60)
   res_str = res.stdout.decode('utf-8')
   if "Connection failed" in res_str or "ERROR" in res_str:
     #print('Yhteys pätki kerran')

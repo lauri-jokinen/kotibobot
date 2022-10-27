@@ -1,11 +1,11 @@
-import kotibobot
+import kotibobot.hs110, kotibobot.electricity_price
 import pandas as pd
 from os.path import exists
 from datetime import date, datetime, timedelta
 
 import requests, urllib.parse, json, math, time # telegram
-
-from common_functions import telegram_message
+import random
+from kotibobot.requests_robust import telegram_message
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
@@ -28,7 +28,8 @@ else:
 minutes_on = 9;
 
 # If too much time has passed, turn it on!
-if df['last_time_on'].iloc[-1] + timedelta(minutes = minutes_on + 2.5) < datetime.now():
+# Also, the fridge is on with some probability
+if random.random() < 0.6 or (df['last_time_on'].iloc[-1] + timedelta(minutes = minutes_on + 2.5) < datetime.now()):
   kotibobot.hs110.ufox_command('on')
   kotibobot.hs110.ufox_command('on')
   df['last_time_on'] = [datetime.now()]
@@ -46,7 +47,8 @@ except:
   kotibobot.hs110.ufox_command('on')
   df['last_time_on'] = [datetime.now()]
   df.to_pickle(file_name)
-  #telegram_message('jotain meni vikaan')
+  telegram_message('jotain meni vikaan demand responsessa')
+  exit()
 
 #print(freq)
 #print(kotibobot.hs110.ufox_is_on())
@@ -59,12 +61,12 @@ if freq < 40.0 or freq > 60.0:
   telegram_message('taajuus heittää häränpyllyä: {}'.format(freq))
   exit()
 
-if freq < 50-1.25*3.28e-2: # 2.5 sigma = 2% of time, 49.9344
+if freq < 50-0.013:
   # low freq? turn it off
   kotibobot.hs110.ufox_command('off')
   kotibobot.hs110.ufox_command('off')
   #telegram_message('decreasing demand!')
-elif freq > 50+1.25*3.28e-2:
+elif freq > 50:
   # high freq? turn it on!
   kotibobot.hs110.ufox_command('on')
   kotibobot.hs110.ufox_command('on')
@@ -82,4 +84,3 @@ else:
   kotibobot.hs110.ufox_command('off')
   kotibobot.hs110.ufox_command('off')
   #telegram_message('normi pois, taajuus {}'.format(freq))
-

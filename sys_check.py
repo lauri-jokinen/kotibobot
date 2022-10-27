@@ -49,7 +49,7 @@ def send_email(message):
 
 print('Ajetaan sys_check-skriptiä...')
 
-time.sleep(55)
+time.sleep(5)
 flag = False
 
 for mi in house.mis:

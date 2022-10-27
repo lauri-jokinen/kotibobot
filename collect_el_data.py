@@ -20,7 +20,7 @@ def collect_and_save():
   
   if exists(file_name):
     df = pd.read_pickle(file_name)
-    df = df.append(new_df, sort=False, ignore_index=True)
+    df = pd.concat([df, new_df], sort=False, ignore_index=True)
   else:
     df = new_df
   

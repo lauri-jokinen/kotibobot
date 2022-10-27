@@ -3,16 +3,17 @@ import json
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
-    
-hard_offset = 1 # positive means lower initial temp in the room
+
+#hard_offset = 1 # positive means lower initial temp in the room
+hard_offset = {'olkkari' : 2.5, 'makkari' : 3, 'työkkäri' : -2}
 
 rooms = json.loads("{}")
 
 # FILL IN THE ROOM INFORMATION IN JSON FORMAT
 # {"room1" : {"eq3": ["mac1","mac2"], "mi" : ["mac3"]}, ...}
 rooms["olkkari"] = json.loads("{}")
-#rooms["olkkari"]["eq3"] = [koodit["keittiön nuppi"], koodit["olkkarin nuppi"]]
-rooms["olkkari"]["eq3"] = [koodit["olkkarin nuppi"]]
+rooms["olkkari"]["eq3"] = [koodit["keittiön nuppi"], koodit["olkkarin nuppi"]]
+#rooms["olkkari"]["eq3"] = [koodit["olkkarin nuppi"]]
 rooms["olkkari"]["mi"] = [koodit["olkkarin lämpömittari"]]
 
 rooms["makkari"] = json.loads("{}")
@@ -20,16 +21,16 @@ rooms["makkari"]["eq3"] = [koodit["makkarin nuppi"]]
 rooms["makkari"]["mi"] = [koodit["makkarin lämpömittari"]]
 
 rooms["työkkäri"] = json.loads("{}")
-#rooms["työkkäri"]["eq3"] = [koodit["työkkärin nuppi"]]
+rooms["työkkäri"]["eq3"] = [koodit["työkkärin nuppi"]]
 rooms["työkkäri"]["mi"] = [koodit["työkkärin lämpömittari"]]
 
 # FILL IN THE MAC ADDRESSES AND NAMES OF ALL DEVICES
 # {"mac1": "device name", ...}
 mac_to_name = json.loads("{}")
-#mac_to_name[koodit["keittiön nuppi"]] = "keittiön nuppi"
+mac_to_name[koodit["keittiön nuppi"]] = "keittiön nuppi"
 mac_to_name[koodit["olkkarin nuppi"]] = "olkkarin nuppi"
 mac_to_name[koodit["makkarin nuppi"]] = "makkarin nuppi"
-#mac_to_name[koodit["työkkärin nuppi"]] = "työkkärin nuppi"
+mac_to_name[koodit["työkkärin nuppi"]] = "työkkärin nuppi"
 mac_to_name[koodit["työkkärin lämpömittari"]] = "työkkärin lämpömittari"
 mac_to_name[koodit["makkarin lämpömittari"]] = "makkarin lämpömittari"
 mac_to_name[koodit["olkkarin lämpömittari"]] = "olkkarin lämpömittari"

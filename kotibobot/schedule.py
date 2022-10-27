@@ -21,7 +21,7 @@ def eq3_schedule(sched):
   return simplify(bound(round1(sched)))
 
 def eq3_command(room, day, sched):
-  arr = eq3_format_array(simplify(round1(bound(sched-hard_offset))))
+  arr = eq3_format_array(simplify(round1(bound(sched-hard_offset[room]))))
   res = []
   for p in arr:
     res.append(str(p[2]))

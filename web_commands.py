@@ -50,8 +50,8 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes("</body></html>", "utf-8"))
         if self.path != '/favicon.ico':
           com = ''.join(self.path.split('/'))
-          if com != 'auto':
-            kotibobot.hs110.ufox_command('off')
+          #if com != 'auto':
+          #  kotibobot.hs110.ufox_command('off')
           command_array = commands[com]
           for c in command_array:
             co = replace_hours_with_time(c)
