@@ -29,7 +29,7 @@ minutes_on = 9;
 
 # If too much time has passed, turn it on!
 # Also, the fridge is on with some probability
-if random.random() < 0.6 or (df['last_time_on'].iloc[-1] + timedelta(minutes = minutes_on + 2.5) < datetime.now()):
+if random.random() > 0.3 or (df['last_time_on'].iloc[-1] + timedelta(minutes = minutes_on + 2.5) < datetime.now()):
   kotibobot.hs110.ufox_command('on')
   kotibobot.hs110.ufox_command('on')
   df['last_time_on'] = [datetime.now()]
@@ -61,7 +61,7 @@ if freq < 40.0 or freq > 60.0:
   telegram_message('taajuus heittää häränpyllyä: {}'.format(freq))
   exit()
 
-if freq < 50-0.013:
+if freq < 50-0.0184:
   # low freq? turn it off
   kotibobot.hs110.ufox_command('off')
   kotibobot.hs110.ufox_command('off')

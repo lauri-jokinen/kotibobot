@@ -180,14 +180,3 @@ def export1(schedules):
       s[eq3][day] = np.ndarray.tolist(schedules[eq3][day])
   with open("/home/lowpaw/Downloads/kotibobot/schedules.json", 'w') as json_file:
     json.dump(s, json_file)
-'''
-a = np.zeros(24*3*2)
-a[12] = 8.0
-a[-2] = 5.2
-a[-1] = 4.0
-a.print()
-a = a.round()
-print('\n')
-a.eq3_command()
-a.update_integral(a,a).eq3_np.zeros(24*3*2).print()
-'''

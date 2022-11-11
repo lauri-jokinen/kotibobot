@@ -16,6 +16,7 @@ def command_2(mac):
   #return_dict['res'] = res_str
 
 def press():
+  return "Ei käytössä talvella. Nähdään taas kesällä!"
   mac = koodit['switchbot']
   res = command_2(mac)
   if "ERROR" in res or 'unsuccessful' in res:

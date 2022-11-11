@@ -1,10 +1,4 @@
 # - *- coding: utf- 8 - *-
-#import dateutil.parser
-#from datetime import datetime
-#from house import *
-#from common_functions import *
-
-# Command queue for eq3 devices, in case connection is lost for an extensive amount of time.
 
 def read():
   fo = open('/home/lowpaw/Downloads/kotibobot/vahti.txt', 'r')

@@ -4,8 +4,6 @@ import pandas as pd
 import numpy as np
 
 import kotibobot
-#import kotibobot.eq3, kotibobot.mi, kotibobot.weather, kotibobot.hs110, kotibobot.plotting, kotibobot.regression, kotibobot.command_queue, kotibobot.thermostat_offset_controller
-#from kotibobot import *
 from house import *
 from common_functions import *
 
@@ -35,8 +33,11 @@ def collect_and_save():
       new_data[sensor + " temp"]     = np.single(mi_reading['temp'])
       new_data[sensor + " humidity"] = np.half(mi_reading['humidity'])
   
-  new_data["outside temp"] = np.single(kotibobot.weather.temp())
-  new_data["outside humidity"] = np.half(kotibobot.weather.humidity())
+  try:
+    new_data["outside temp"] = np.single(kotibobot.weather.temp())
+    new_data["outside humidity"] = np.half(kotibobot.weather.humidity())
+  except:
+    'nothing here'
   
   #new_data["olkkari power socket"] = np.half(kotibobot.hs110.ufox_power())
   
@@ -54,21 +55,7 @@ def collect_and_save():
   #print(df)
   
   df.to_pickle(file_name)
-'''
-def telegram_message(html_content): # import requests, urllib.parse
-  chat_id = '131994588' # Lapa
-  url = 'https://api.telegram.org/bot'
-  url = url + koodit["L-bot"]
-  url = url + '/sendMessage?chat_id='
-  url = url + chat_id
-  url = url + '&text='
-  url = url + urllib.parse.quote(html_content)
-  url = url + '&parse_mode=html'
-  response = requests.get(url)
-  return response
 
-telegram_message('juu?')
-'''
 collect_and_save()
 kotibobot.plotting.main_function()
 
@@ -78,9 +65,6 @@ kotibobot.plotting.main_function()
 
 kotibobot.thermostat_offset_controller.apply_control()
 kotibobot.command_queue.do()
-
-#print(restart_bluetooth())
-#kotibobot.regression.do(['outside temp', 'työkkärin nuppi valve'], 'työkkärin lämpömittari temp', []) #'keittiön nuppi target'
 
 print('jii')
 

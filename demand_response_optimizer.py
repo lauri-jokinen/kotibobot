@@ -11,7 +11,7 @@ with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
 def frequency():
     TOKEN = koodit["fingrid"] # lateus96
     # TOKEN = koodit["fingrid2"] lauri.a.jokinen
-    five_minutes = timedelta(hours=30*24)
+    five_minutes = timedelta(hours=15*24)
     now = datetime.now() + five_minutes
     before = datetime.now() - five_minutes
     start = before.strftime("%Y-%m-%dT%HXXX%MXXX%S").replace('XXX','%3A') + '%2B' + "%02d" % math.floor(-time.timezone / 3600) + '%3A00'
@@ -27,17 +27,15 @@ df.replace([np.inf, -np.inf], np.nan, inplace=True) # replace +-inf with nan
 df = df[df['value'].notna()] # remove nans
 freqs = np.array(df['value'])
 
-#df = pd.DataFrame()
-#freqs = [50.2, 51.4, 49.7, 49.43, 50.4,49.89,49,49,49,49,49,48,50.234]
+ds = np.linspace(0,0.05,100)
+ints = np.linspace(0,0.05,100)
+prob_pivot = 0.0003
 
-#freqs = np.random.normal(0, 1.42e-2, 50)
-#freqs = np.concatenate((freqs, -freqs))
-#freqs = np.cumsum(freqs) + 50
-
-ds = np.linspace(0,0.04,100)
-ints = np.linspace(0,0.04,100)
-prob_pivot = 0.2
-
+#### special probability
+prob = sum(df['value'] < 50 - 0.0184)/len(freqs)
+three_mins_in_hour = 60/3
+print(prob * three_mins_in_hour * 0.25)
+exit()
 # pivot gives the fraction of time we'd like to shut down the appliance
 
 # now, we integrate frequency, but only at times when the appliance is down.
@@ -52,7 +50,7 @@ for p in range(len(ds)):
     ints[p] = 50
     continue
   f_low = 50-d
-  f_up = 50+d*0.5 # change this and find optimum
+  f_up = 50+d*0.0 # change this and find optimum
   off_count = 0
   integral = 0
   is_on = 1
@@ -64,6 +62,9 @@ for p in range(len(ds)):
       integral = integral + (freqs[i] + freqs[i+1])/2 * (off_count+1)
       off_count = 0
       is_on = 1
+      continue
+      
+    if freqs[i] < 40.0 or freqs[i] > 60.0:
       continue
     
     if freqs[i] < f_low:

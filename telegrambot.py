@@ -133,12 +133,6 @@ def data_command(update, context):
     return
   update.message.reply_text(kotibobot.plotting.print_latest_data())
 
-def restart_bluetooth(update, context):
-  if not authorized(update, context):
-    update.message.reply_text("You are not authorized.")
-    return
-  print(common_functions.restart_bluetooth())
-
 def command_queue_append(update, context):
   str = update.message.text
   str = " ".join(str.split(" ")[1:]) # Removes the /-command
@@ -152,13 +146,6 @@ def command_queue_print(update, context):
 
 def command_queue_wipe(update, context):
   update.message.reply_text(kotibobot.command_queue.wipe())
-
-def command_queue_do(update, context):
-  waiting_message = update.message.reply_text('Suoritetaan komentojonoa...')
-  kotibobot.command_queue.do()
-  update.message.reply_text('Tehty! Jono on nyt seuraava:')
-  command_queue_print(update, context)
-  waiting_message.delete()
   
 def vahti_append(update, context):
   if not authorized(update, context):
@@ -184,7 +171,6 @@ def timer_new(update, context):
     return
   string = update.message.text
   waiting_message = update.message.reply_text('Hetkinen...')
-  #try:
   string_set = string.split(" ")[1:] # Removes the /-command
   if len(string_set)==1:
     schedule = kotibobot.schedule.import1()
@@ -194,8 +180,6 @@ def timer_new(update, context):
     times = string_set[3].split('-')
     res = kotibobot.schedule.set1(string_set[0], string_set[1], string_set[2], times[0], times[1], True, True)
     update.message.reply_text(res)
-  #except:
-  #  update.message.reply_text("ERROR: Something went wrong.")
   waiting_message.delete()
 
 def wake_on_lan(update, context):
@@ -204,18 +188,12 @@ def wake_on_lan(update, context):
     return
   send_magic_packet(koodit['pöytäkone-mac'])
   update.message.reply_text('Tehty!')
-
-def outside_temp(update, context):
-  update.message.reply_text(kotibobot.weather.temp())
   
 def switchbot_push(update, context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
   update.message.reply_text(kotibobot.switchbot.press())
-  
-#def prices_of_running_appliance(update, context):
-#  update.message.reply_text(kotibobot.electricity_price.price_of_running_appliance_human(3, 24, 0.88))
 
 def main():
   # Create Updater object and attach dispatcher to it
@@ -232,18 +210,15 @@ def main():
   command_tyokkari_handler = CommandHandler('tyokkari', tyokkaricommand)
   command_makkari_handler = CommandHandler('makkari', makkaricommand)
   data_handler = CommandHandler('data', data_command)
-  restartBT_handler = CommandHandler('restartBT', restart_bluetooth)
   command_queue_append_handler = CommandHandler('addtoqueue', command_queue_append)
   command_queue_print_handler = CommandHandler('printqueue', command_queue_print)
   command_queue_wipe_handler = CommandHandler('wipequeue', command_queue_wipe)
-  command_queue_do_handler = CommandHandler('runqueue', command_queue_do)
   wake_on_lan_handler = CommandHandler('wakecomputer', wake_on_lan)
   timer_handler = CommandHandler('timer', timer_new)
   vahti_append_handler = CommandHandler('addtovahti', vahti_append)
   vahti_print_handler = CommandHandler('printvahti', vahti_print)
   vahti_wipe_handler = CommandHandler('wipevahti', vahti_wipe)
   switchbot_handler = CommandHandler('cool', switchbot_push)
-  #tiskikone_handler = CommandHandler('tiskikone', prices_of_running_appliance)
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
@@ -253,18 +228,15 @@ def main():
   dispatcher.add_handler(command_makkari_handler)
   dispatcher.add_handler(command_tyokkari_handler)
   dispatcher.add_handler(data_handler)
-  dispatcher.add_handler(restartBT_handler)
   dispatcher.add_handler(command_queue_append_handler)
   dispatcher.add_handler(command_queue_print_handler)
   dispatcher.add_handler(command_queue_wipe_handler)
-  dispatcher.add_handler(command_queue_do_handler)
   dispatcher.add_handler(wake_on_lan_handler)
   dispatcher.add_handler(timer_handler)
   dispatcher.add_handler(vahti_append_handler)
   dispatcher.add_handler(vahti_print_handler)
   dispatcher.add_handler(vahti_wipe_handler)
   dispatcher.add_handler(switchbot_handler)
-  #dispatcher.add_handler(tiskikone_handler)
 
   # Start the bot
   updater.start_polling()

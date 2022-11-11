@@ -8,44 +8,8 @@ from datetime import date
 import kotibobot
 import house
 
-
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
   koodit = json.load(json_file)
-
-def send_email(message):
-  # Step 2 - Create message object instance
-  msg = MIMEMultipart()
-   
-  # Step 3 - Create message body
-  #message = "Test from Python via AuthSMTP"
-  
-  # Step 4 - Declare SMTP credentials
-  password = koodit["kotikone_salasana"]
-  username = "lauri.jokinen@kotikone.fi"
-  smtphost = "smtpa.kolumbus.fi:587"
-  
-  # Step 5 - Declare message elements
-  msg['From'] = "lauri.jokinen@kotikone.fi"
-  msg['To'] = "lateus96@gmail.com"
-  msg['Subject'] = "Kotibobot"
-  
-  # Step 6 - Add the message body to the object instance
-  msg.attach(MIMEText(message, 'plain'))
-   
-  # Step 7 - Create the server connection
-  server = smtplib.SMTP(smtphost)
-  
-  # Step 8 - Switch the connection over to TLS encryption
-  server.starttls()
-   
-  # Step 9 - Authenticate with the server
-  server.login(username, password)
-   
-  # Step 10 - Send the message
-  server.sendmail(msg['From'], msg['To'], msg.as_string())
-  
-  # Step 11 - Disconnect
-  server.quit()
 
 print('Ajetaan sys_check-skriptiä...')
 
@@ -66,7 +30,9 @@ if not flag:
       break
 
 if flag:
-  send_email('Jotkin paristot ovat lopussa.') # low battery message
+  # low battery message
+  kotibobot.requests_robust.telegram_message('Jotkin paristot ovat lopussa.')
 else:
-  if date.today().weekday() == 0: # only on mondays
-    send_email('Kaikki on hyvin.') # ok message
+  if date.today().weekday() == 0:
+    # ok message, only on mondays
+    kotibobot.requests_robust.telegram_message('Kaikki on hyvin.')

@@ -12,8 +12,8 @@ with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
 
 commands = {
-'cool-1h':['olkkari vacation {1} 15', 'työkkäri vacation {1} 15', 'makkari vacation {1} 15'],
-'cool-2h':['olkkari vacation {2} 15', 'työkkäri vacation {2} 15', 'makkari vacation {2} 15'],
+'cool-1h':['olkkari vacation {1} 15', 'työkkäri vacation {1} 15'],
+'cool-2h':['olkkari vacation {2} 15', 'työkkäri vacation {2} 15'],
 'auto':['olkkari auto', 'työkkäri auto', 'makkari auto']
 }
 

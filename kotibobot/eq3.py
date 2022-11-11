@@ -9,18 +9,20 @@ from common_functions import *
 import kotibobot.append_vacation
 from kotibobot.command_queue import remove_append_vacation as remove_append_vacation
 
-def command(string):
+def command(string): # mac format
   s = ['/home/lowpaw/Downloads/eq3/eq3.exp', 'hci1'] + string.split(' ')
   res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 60)
   res_str = res.stdout.decode('utf-8')
   if "Connection failed" in res_str or "ERROR" in res_str:
     #print('Yhteys pätki kerran')
     time.sleep(5)
+    s = ['/home/lowpaw/Downloads/eq3/eq3.exp', 'hci0'] + string.split(' ')
     res = subprocess.run(s, stdout=subprocess.PIPE)
     res_str = res.stdout.decode('utf-8')
     if "Connection failed" in res_str or "ERROR" in res_str:
       #print('Yhteys pätki toisen kerran')
       time.sleep(5)
+      s = ['/home/lowpaw/Downloads/eq3/eq3.exp', 'hci1'] + string.split(' ')
       res = subprocess.run(s, stdout=subprocess.PIPE)
       res_str = res.stdout.decode('utf-8')
   return res_str

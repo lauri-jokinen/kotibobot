@@ -6,9 +6,9 @@ import subprocess # ubuntu bash
 from house import *
 from common_functions import *
 
-def command_2(mac):
+def command_2(mac,interface):
   try:
-    s = ['/home/lowpaw/Downloads/mi_scripts/LYWSD03MMC.py', '--device', mac, '--count', '1', '--unreachable-count', '5', '--interface', '1']
+    s = ['/home/lowpaw/Downloads/mi_scripts/LYWSD03MMC.py', '--device', mac, '--count', '1', '--unreachable-count', '5', '--interface', str(interface)]
     res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 60)
     res_str = res.stdout.decode('utf-8')
   except:
@@ -17,11 +17,11 @@ def command_2(mac):
   #return_dict['res'] = res_str
 
 def command(mac):
-  res = command_2(mac)
+  res = command_2(mac,1)
   if "ERROR" in res or 'unsuccessful' in res:
-    res = command_2(mac)
+    res = command_2(mac,0)
     if "ERROR" in res or 'unsuccessful' in res:
-      return command_2(mac)
+      return command_2(mac,1)
   return res
 
 def to_json(mac):
@@ -36,24 +36,7 @@ def to_json(mac):
     mi_json['humidity'] = float('nan')
     mi_json['battery'] = float('nan')
   return mi_json
-'''
-def to_json_new_bad(mac):
-  mi_json = json.loads("{}")
-  mi_json['temp']     = float('nan')
-  mi_json['humidity'] = float('nan')
-  mi_json['battery']  = float('nan')
-  for i in range(10):
-    try:
-      data = Lywsd03mmcClient(mac).data
-      mi_json['temp'] = data.temperature
-      mi_json['humidity'] = data.humidity
-      mi_json['battery'] = data.battery
-      break
-    except:
-      'nothing here'
-    time.sleep(0.68)
-  return mi_json
-'''
+
 def read_human(s):
   s = remove_extra_spaces(s)
   selected_rooms = s.split(" ")[0].split("-")

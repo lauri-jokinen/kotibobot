@@ -11,34 +11,6 @@ from house import *
 from kotibobot.plotting import load_ts_data, latest_data_json
 from datetime import date, datetime
 
-'''
-def target_has_changed(eq3_name, really):
-  data = load_ts_data()
-  index = len(data.index)-1
-  col1 = eq3_name + ' target'
-  col2 = eq3_name + ' offset'
-  res = []
-  if not math.isnan(data.iloc[index][col1] + data.iloc[index][col2]):
-    res.append(data.iloc[index][col1] + data.iloc[index][col2])
-  else:
-    while index > 0 and math.isnan(data.iloc[index][col1] + data.iloc[index][col2]):
-      index = index - 1
-    if really == "really":
-      res.append(data.iloc[index][col1] + hard_offset)
-    else:
-      res.append(data.iloc[index][col1] + data.iloc[index][col2])
-  
-  index = index-1
-  if not math.isnan(data.iloc[index][col1] + data.iloc[index][col2]):
-    res.append(data.iloc[index][col1] + data.iloc[index][col2])
-  else:
-    while index > 0 and math.isnan(data.iloc[index][col1] + data.iloc[index][col2]):
-      index = index - 1
-    res.append(data.iloc[index][col1] + data.iloc[index][col2])
-  
-  return not (res[0] == res[1])
-'''
-
 def latest_temps(room):
   # three latest datapoints for each mi in the room
   data = load_ts_data()
