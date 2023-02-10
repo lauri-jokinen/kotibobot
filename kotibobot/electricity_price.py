@@ -12,7 +12,7 @@ from os.path import exists
 import kotibobot.requests_robust
 
 with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
-    koodit = json.load(json_file)
+  koodit = json.load(json_file)
 
 '''
 from selenium import webdriver
@@ -81,21 +81,21 @@ def get():
   return res
 '''
 
-def get_forwards():
+def get_forwards(time_delta = 0):
   for i in range(120): # 120 * 120 sek = 4 h
     try:
-      res = get_forwards3()
+      res = get_forwards3(time_delta)
       break
     except Exception as e:
       print(e)
     time.sleep(120.752345)
   return res
 
-def get_forwards3():
+def get_forwards3(time_delta):
   url = "https://www.nordpoolgroup.com/api/marketdata/page/10?currency=,,,EUR"
   r = kotibobot.requests_robust.get_url(url).json()['data']
   # check if today's data
-  today = (datetime.now() - timedelta(hours=0)).replace(hour=0, minute=0, second=0, microsecond=0)
+  today = (datetime.now() - timedelta(hours=time_delta)).replace(hour=0, minute=0, second=0, microsecond=0)
   if not (datetime.strptime(r['DateUpdated'][0:10], '%Y-%m-%d') == today):
     raise Exception("Forward data is not yet published; data date is yesterday")
     
@@ -106,7 +106,7 @@ def get_forwards3():
       for col in row['Columns']:
           if col['Name'] == 'FI' and len(prices) < 24:
               if col['Value']!='-': # accounts for daylight savings time; actually NP api does not work at days around DST for some reason
-                if datetime.now().month == 12:
+                if True: # datetime.now().month == 12: (only 10% tax for now)
                   prices.append(float(col['Value'].replace(',','.'))*1.10*0.1) # tax 10 % and conversion EUR/MW to cent/kW
                 else:
                   prices.append(float(col['Value'].replace(',','.'))*1.24*0.1) # tax 24 % and conversion EUR/MW to cent/kW
@@ -136,17 +136,25 @@ def get_forwards2():
 '''
 def load_ts_data():
   df = pd.DataFrame()
-  year = datetime.now().year + 1
+  year = datetime.now().year
   for i in range(2):
     file_name = '/home/lowpaw/Downloads/kotibobot/el-price_' + str(year - i) + '.pkl'
     if exists(file_name):
       df_year = pd.read_pickle(file_name)
-      #df = df_year.append(df, sort=False, ignore_index=True)
-      df = pd.concat([df,df_year], sort=False, ignore_index=True)
-  df = df.drop_duplicates(subset=['time'])
-  return df[df['time'] > datetime.now() - timedelta(hours = 8765.81)]
+      df = pd.concat([df_year,df], sort=False, ignore_index=True)
+  
+  if 'time' in df.columns:
+    df = df.drop_duplicates(subset=['time'])
+    df['electricity price'] = df['electricity price'] + 2.96 + 2.793 # NOTE! Caruna's price is added here
+    return df[df['time'] > datetime.now() - timedelta(hours = 8765.81)]
+  else:
+    df['time'] = [datetime.now()]
+    df['electricity price'] = [float('nan')]
+    return df
 
-def current(df = load_ts_data()):
+def current(df = pd.DataFrame()):
+  if not ('time' in df.columns):
+    df = load_ts_data()
   time = datetime.now().replace(minute=0, second=0, microsecond=0)
   df_with_value = df[df['time'] == time]
   if len(df_with_value.index) >= 1:
@@ -154,19 +162,25 @@ def current(df = load_ts_data()):
   else:
     return float('nan')
 
-def precentile(df = load_ts_data()):
+def precentile(df = pd.DataFrame()):
+  if not ('time' in df.columns):
+    df = load_ts_data()
   value = current(df)
   df_below = df[df['electricity price']<=value]
   return len(df_below) / len(df)
 
-def precentile_interval(h1, h2, df = load_ts_data()):
+def precentile_interval(h1, h2, df = pd.DataFrame()):
+  if not ('time' in df.columns):
+    df = load_ts_data()
   value = current(df)
   df = df[df['time'].dt.hour>=h1]
   df = df[df['time'].dt.hour<=h2]
   df_below = df[df['electricity price']<=value]
   return len(df_below) / len(df)
 
-def duck_curve(df = load_ts_data()):
+def duck_curve(df = pd.DataFrame()):
+  if not ('time' in df.columns):
+    df = load_ts_data()
   # note that we use MEDIAN instead of MEAN!
   # it's more robust to outliers; price peaks may be high, but lows are not as striking
   means = []
@@ -194,3 +208,18 @@ def frequency(full_response = False):
       return resp.json()[-1]['value']
   except:
     return float('nan')
+    
+'''
+### TOINEN HIDDEN API (jos nordpool ei toimi)
+# Tää on se oikee sivu https://www.pks.fi/sahkotarjoukset/kotiin/mita-on-porssisahko/
+# Ajat on unix, ilman aikaeroa (?)
+# onko alv mukana? Toimiiko DST oikein?
+# Onko edes järkevää pitää omaa databasea, koska tuolta saa vuoden datat.
+r = requests.get("https://www.pks.fi/wp-content/themes/pks/sahkoporssi/domparser/sahkoporssiDataHourly.json").json()
+r_end = r['Series']['Prices']['Data']
+df = pd.DataFrame(r_end)
+df.columns = ['time','electricity price']
+df['time'] = pd.to_datetime(df['time'],origin='unix',unit='ms')
+df['electricity price'] = np.single(df['electricity price'])
+print(df)
+'''

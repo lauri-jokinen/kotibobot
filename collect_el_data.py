@@ -12,9 +12,9 @@ from common_functions import *
 
 import kotibobot.electricity_price
 
-def collect_and_save():
+def collect_and_save(time_delta = 0):
   
-  new_df = kotibobot.electricity_price.get_forwards()
+  new_df = kotibobot.electricity_price.get_forwards(time_delta)
   print(new_df)
   file_name = '/home/lowpaw/Downloads/kotibobot/el-price_' + datetime.today().strftime("%Y") + '.pkl'
   
@@ -38,8 +38,10 @@ def collect_and_save():
   #print(df)
   df.to_pickle(file_name)
 
-# run function
-collect_and_save()
+if datetime.now().hour <= 6:
+  collect_and_save(24) # today
+else:
+  collect_and_save() # tomorrow
 
 # cron:
 # 0 * * * * DISPLAY=:0 /usr/bin/python3 /home/lowpaw/Downloads/kotibobot/collect_el_data.py

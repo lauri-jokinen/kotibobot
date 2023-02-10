@@ -182,6 +182,38 @@ def timer_new(update, context):
     update.message.reply_text(res)
   waiting_message.delete()
 
+def refresh_timers(update, context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
+  waiting_message = update.message.reply_text('Hetkinen...')
+  kotibobot.schedule.refresh_eq3_schedules()
+  update.message.reply_text('Tehty!')
+  waiting_message.delete()
+
+def workday_cool(update, context):
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
+  hour = 16
+  time = datetime.now().replace(hour=hour, minute=0, second=0, microsecond=0)
+  if time < datetime.now():
+    update.message.reply_text('Kello on jo yli {}, joten en tee mitään.'.format(str(hour)))
+    return
+  string = time.strftime("%y-%m-%d %H:%M")
+  update.message.reply_text('Tehty! Koti on viileä klo {} asti.'.format(str(hour)))
+  
+  co = 'olkkari vacation {} 15'.format(string)
+  res = kotibobot.eq3.command_human(co)
+  if "Connection failed" in ''.join(res) or "ERROR" in ''.join(res):
+    kotibobot.command_queue.append(co)
+  
+  co = 'työkkäri vacation {} 15'.format(string)
+  res = kotibobot.eq3.command_human(co)
+  if "Connection failed" in ''.join(res) or "ERROR" in ''.join(res):
+    kotibobot.command_queue.append(co)
+  
+
 def wake_on_lan(update, context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
@@ -194,6 +226,12 @@ def switchbot_push(update, context):
     update.message.reply_text("You are not authorized.")
     return
   update.message.reply_text(kotibobot.switchbot.press())
+
+def ip(update, context): # shows public ip address
+  if not authorized(update, context):
+    update.message.reply_text("You are not authorized.")
+    return
+  update.message.reply_text(kotibobot.requests_robust.get_public_ip())
 
 def main():
   # Create Updater object and attach dispatcher to it
@@ -219,6 +257,9 @@ def main():
   vahti_print_handler = CommandHandler('printvahti', vahti_print)
   vahti_wipe_handler = CommandHandler('wipevahti', vahti_wipe)
   switchbot_handler = CommandHandler('cool', switchbot_push)
+  ip_handler = CommandHandler('ip', ip)
+  workday_handler = CommandHandler('workday', workday_cool)
+  refresh_timers_handler = CommandHandler('refreshtimers', refresh_timers)
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
@@ -237,6 +278,9 @@ def main():
   dispatcher.add_handler(vahti_print_handler)
   dispatcher.add_handler(vahti_wipe_handler)
   dispatcher.add_handler(switchbot_handler)
+  dispatcher.add_handler(ip_handler)
+  dispatcher.add_handler(workday_handler)
+  dispatcher.add_handler(refresh_timers_handler)
 
   # Start the bot
   updater.start_polling()

@@ -1,10 +1,23 @@
 from kotibobot.electricity_price import load_ts_data
+from kotibobot.schedule import read_schedule
+from house import rooms
 import numpy as np
 from datetime import datetime, timedelta
 import math
 
-def price_of_running_appliance(duration, timer_N, timer_delta):
-  #df = kotibobot.electricity_price.load_ts_data()
+def kaukolampo_c_kWh():
+  # https://www.helen.fi/lammitys-ja-jaahdytys/kaukolampo/hinnat
+  # c/kWh; hinta sis. alv
+  return 10.74*0.7 # a little factor that accounts for the warm waste water
+
+def is_daytime(end):
+  a = read_schedule(rooms['olkkari']["eq3"][0], end-timedelta(hours=1)) >= 20.0
+  b = read_schedule(rooms['olkkari']["eq3"][0], end) >= 20.0
+  c = read_schedule(rooms['olkkari']["eq3"][0], end+timedelta(hours=1)) >= 20.0
+  #print(((1.0*a)+(1.0*b)+(1.0*c)) / 3.0)
+  return (((1.0*a)+(1.0*b)+(1.0*c)) / 3.0)
+
+def price_of_running_appliance(duration, timer_N, timer_delta): # gives actually c/kWh*duration_in_hours , not price
   df = load_ts_data()
   now = datetime.now().replace(minute=0, second=0, microsecond=0)
   prices = np.zeros(timer_N)*float('nan')
@@ -18,6 +31,7 @@ def price_of_running_appliance(duration, timer_N, timer_delta):
     ends.append(datetime.now() + q*timer_delta + duration)
     deltas.append(q*timer_delta)
     
+    # first (incomplete) hour
     time = datetime.now() + q*timer_delta
     time_floor = time.replace(minute=0, second=0, microsecond=0)
     
@@ -25,15 +39,16 @@ def price_of_running_appliance(duration, timer_N, timer_delta):
     
     if len(val_df) == 1:
       prices[q] = val_df[0] * (60 - time.minute) / 60
-      
+    
+    # loop the full hours in the middle
     p = 0
-    #print(time_floor)
     start = time_floor + timedelta(hours=1)
     end = start + timedelta(hours=1)
     
     while end < datetime.now() + q*timer_delta + duration:
       #print(start)
       val_df = df[df['time']==start]['electricity price'].values
+      
       if len(val_df) == 1:
         prices[q] = prices[q] + val_df[0]
       else:
@@ -41,10 +56,9 @@ def price_of_running_appliance(duration, timer_N, timer_delta):
       end = end + timedelta(hours=1)
       start = start + timedelta(hours=1)
     
-    
+    # last (incomplete) hour
     time = datetime.now() + q*timer_delta + duration
     time_floor = time.replace(minute=0, second=0, microsecond=0)
-    #print(time_floor)
     
     val_df = df[df['time']==time_floor]['electricity price'].values
     
@@ -52,6 +66,10 @@ def price_of_running_appliance(duration, timer_N, timer_delta):
       prices[q] = prices[q] + val_df[0] * (time.minute) / 60
     else:
       prices[q] = float('nan')
+    
+    # take kaukolampo prices into account, if appliance is run at daytime
+    kaukolampo_price = kaukolampo_c_kWh() * is_daytime(ends[q]) * duration.seconds / 60 / 60
+    prices[q] = prices[q] - kaukolampo_price
       
   return (prices, starts, ends, deltas)
     
@@ -127,7 +145,7 @@ html_data_pyykki = html_data_pyykki[0] + data_pyykki + html_data_pyykki[1] + '<b
 html_data_tiski = ['''<HTML>
 <meta charset="UTF-8">
 <HEAD>
-<TITLE>Pyykkikoneen ajastus</TITLE>
+<TITLE>Tiskikoneen ajastus</TITLE>
 <style>
 table { border-collapse: collapse; width: 90%;}
 td { text-align: right; }

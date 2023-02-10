@@ -410,7 +410,7 @@ def humidity_days(room, data_orig, a, make_plot = True):
 def electricity_price_days(data_orig, a, make_plot = True):
   plt.ioff()
   filename = 'electricity_price.svg'
-  plotname = "Electricity price, past three days"
+  plotname = "Electricity price"
   if not make_plot:
     return html_link(plotname, filename)
   data = data_orig

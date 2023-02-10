@@ -24,3 +24,7 @@ def get_url(url,headers={}):
   s.mount('http://', HTTPAdapter(max_retries=retries))
   s.headers.update(headers)
   return s.get(url)
+
+def get_public_ip():
+  ip = get_url('https://api.ipify.org').content.decode('utf8')
+  return ip

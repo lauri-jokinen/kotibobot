@@ -1,16 +1,20 @@
 import subprocess # ubuntu bash
-from datetime import datetime
+from datetime import datetime, timedelta
 
-#from kotibobot.plotting import load_ts_data, latest_data_json
+from kotibobot.plotting import load_ts_data, latest_data_json, outside_hum_to_inside_hum
 #from house import *
-#import kotibobot.electricity_price
+import kotibobot.electricity_price, kotibobot.thermostat_offset_controller, json
+
+with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
+    koodit = json.load(json_file)
+'''
 #import kotibobot.schedule
 
 def read_schedule(eq3):
   weekday = date.today().weekday()
   schedule = kotibobot.schedule.import1()
   return kotibobot.schedule.read(schedule[eq3][kotibobot.schedule.everyday[weekday]],datetime.now())
-
+'''
 def plug_command(string, name):
   s = ['/home/lowpaw/Downloads/HS110/'+ name +'.py', '-c'] + string.split(' ')
   try:
@@ -21,13 +25,13 @@ def plug_command(string, name):
 
 
 def ufox_command(string):
-  return plug_command(string, 'ufox')
+  return plug_command(string, 'ufox') # jääkaappi
 
 def makkari_humidifier_command(string):
-  return plug_command(string, 'makkarin_kostutin')
+  return plug_command(string, 'makkarin_kostutin') # makkarin kostutuin
 
 def tyokkari_humidifier_command(string):
-  return plug_command(string, 'työkkärin_kostutin')
+  return plug_command(string, 'työkkärin_kostutin') # olkkarin kostutin, ufox
 '''
 def ufox_is_on():
   try:
@@ -52,73 +56,68 @@ def ufox_power():
   except:
     return float('nan')
 
+
 '''
 # HUMIDIFIER CODE
-def ufox_automation():
-  data = latest_data_json()
-  humidity = data['olkkarin lämpömittari humidity']
-  
-  if humidity >= 48.0:
-    #print('Humidity is high')
-    return ufox_command('off')
-  
-  if kotibobot.electricity_price.precentile_interval(9,21) >= 0.85 and humidity >= 42.0:
-    #print('Electricity is costly')
-    return ufox_command('off')
-  
-  if datetime.now().hour >= 22 or datetime.now().hour < 9:
-    #print("It's night time")
-    return ufox_command('off')
-    
-  if (data['olkkarin nuppi vacationmode'] == 1 or data['keittiön nuppi vacationmode'] == 1) and (data['olkkarin nuppi target'] <= 16.0 or data['keittiön nuppi target'] <= 16.0):
-    print("It's cold time")
-    return ufox_command('off')
-  
-  print("Ufox on")
-  return ufox_command('on')
-
 
 def makkari_humidifier_automation():
-  data = latest_data_json()
+  (data, data_times) = latest_data_json(True)
   humidity = data['makkarin lämpömittari humidity']
   temp = data['makkarin lämpömittari temp']
+  target_temp = kotibobot.thermostat_offset_controller.read_schedule(koodit["makkarin nuppi"])
+  # relative humidity at target temperature
+  if temp > target_temp:
+    humidity = outside_hum_to_inside_hum(target_temp, temp, humidity)
+  humidity_timestamp = data_times['makkarin lämpömittari humidity']
   
-  if (datetime.now().hour >= 23 or datetime.now().hour < 1) and humidity >= 43.0:
-    #print("It's the middle of the night")
-    return makkari_humidifier_command('off')
-  
-  if humidity >= 50.0:
+  if humidity > 52.0 or humidity_timestamp < datetime.now() - timedelta(minutes=20):
     #print('Humidity is high in makkari')
     return makkari_humidifier_command('off')
+    
+  if target_temp > 21.0 and humidity > 47.0: # morning heat
+    return makkari_humidifier_command('off')
   
-  #if not (datetime.now().hour >= 20 or datetime.now().hour < 10):
-  #  #print("It's day time")
-  #  return makkari_humidifier_command('off')
+  if not (datetime.now().hour >= 22 or datetime.now().hour < 8):
+    #print("It's day time")
+    return makkari_humidifier_command('off')
   
-  if (data['makkarin nuppi vacationmode'] == 1) and (data['makkarin nuppi target'] <= 16.0):
+  if (data['makkarin nuppi vacationmode'] == 1) and (data['makkarin nuppi target'] <= 19.0):
     print("It's cold time")
+    return makkari_humidifier_command('off')
+  
+  if target_temp <= 19.0:
+    #print("It's scheduled cold time")
     return makkari_humidifier_command('off')
   
   #print("Makkari humidifier on")
   return makkari_humidifier_command('on')
-  
+
 def tyokkari_humidifier_automation():
-  data = latest_data_json()
+  (data, data_times) = latest_data_json(True)
   humidity = data['työkkärin lämpömittari humidity']
-  #print('Humidity: ' + str(humidity))
+  temp = data['työkkärin lämpömittari temp']
+  target_temp = kotibobot.thermostat_offset_controller.read_schedule(koodit["työkkärin nuppi"])
+  # relative humidity at target temperature
+  if temp > target_temp:
+    humidity = outside_hum_to_inside_hum(target_temp, temp, humidity)
+  humidity_timestamp = data_times['työkkärin lämpömittari humidity']
   
-  if datetime.now().hour >= 22 or datetime.now().hour < 9:
+  if datetime.now().hour >= 22 or datetime.now().hour < 7:
     #print("It's night time")
     return tyokkari_humidifier_command('off')
   
-  if humidity >= 50.0:
+  if humidity > 48.0 or humidity_timestamp < datetime.now() - timedelta(minutes=20):
     #print('Humidity is high')
     return tyokkari_humidifier_command('off')
     
-  if (data['työkkärin nuppi vacationmode'] == 1) and (data['työkkärin nuppi target'] <= 16.0):
-    print("It's cold time")
+  if (data['työkkärin nuppi vacationmode'] == 1) and (data['työkkärin nuppi target'] <= 19.0):
+    #print("It's cold vacation")
     return tyokkari_humidifier_command('off')
   
-  #print("Makkari humidifier on")
+  if target_temp <= 20.0:
+    #print("It's scheduled cold time")
+    return tyokkari_humidifier_command('off')
+  
+  #print("On!")
   return tyokkari_humidifier_command('on')
 '''

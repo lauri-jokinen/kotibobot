@@ -97,6 +97,11 @@ def read(sched,time): # time is datetime
     j = j+1
   # t = t-timedelta(minutes=10) <- time of the given temperature
   return sched[j]
+  
+def read_schedule(eq3, time): # time is datetime
+  weekday = time.weekday()
+  schedule = import1()
+  return kotibobot.schedule.read(schedule[eq3][kotibobot.schedule.everyday[weekday]],time)
 
 def to_day_list(string):
   if string == 'everyday':
@@ -107,6 +112,17 @@ def to_day_list(string):
     return weekdays
   else:
     return [string]
+
+def refresh_eq3_schedules():
+  # refresh timers on eq3, e.g., when hard_offset is updated
+  days = to_day_list('everyday')
+  schedule = import1()
+  for room in rooms:
+    if "eq3" in rooms[room]:
+      for eq3 in rooms[room]["eq3"]:
+        last_eq3 = eq3
+      for day in days:
+        eq3_command(room, day, schedule[last_eq3][day])
 
 def set1(room,d,T,t1,t2,do_eq3_command=False,export_schedule=False): # ti 1 and t2 are strings
   if t2=='24:00':

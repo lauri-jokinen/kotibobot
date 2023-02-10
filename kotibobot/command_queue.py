@@ -25,6 +25,9 @@ def rewrite(commands):
   fo.write("\n".join(commands))
   fo.close()
 
+
+'''
+# with @-functionality:
 def do():
   queue = read()
   i = 0
@@ -48,6 +51,22 @@ def do():
         rewrite(queue)
       else:
         i = i+1
+  rewrite(queue)
+'''
+
+def do():
+  queue = read()
+  i = 0
+  while i < len(queue):
+    res = " ".join(kotibobot.eq3.command_human(queue[i]))
+    if not ("ERROR" in res or "failed" in res):
+      # read, modify and rewrite because of time consumed by the eq3 command
+      # new commands may have been appended during this time
+      queue = read()
+      queue.pop(i)
+      rewrite(queue)
+    else:
+      i = i+1
   rewrite(queue)
 
 def print_queue():

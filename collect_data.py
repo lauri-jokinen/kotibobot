@@ -59,8 +59,7 @@ def collect_and_save():
 collect_and_save()
 kotibobot.plotting.main_function()
 
-#kotibobot.hs110.ufox_automation()
-#kotibobot.hs110.makkari_humidifier_automation()
+#kotibobot.hs110.makkari_humidifier_automation() # moved to demand_response.py
 #kotibobot.hs110.tyokkari_humidifier_automation()
 
 kotibobot.thermostat_offset_controller.apply_control()
@@ -68,5 +67,5 @@ kotibobot.command_queue.do()
 
 print('jii')
 
-#telegram_message('jii!')
+#kotibobot.requests_robust.telegram_message('jii!')
 
