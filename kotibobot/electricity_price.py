@@ -106,10 +106,7 @@ def get_forwards3(time_delta):
       for col in row['Columns']:
           if col['Name'] == 'FI' and len(prices) < 24:
               if col['Value']!='-': # accounts for daylight savings time; actually NP api does not work at days around DST for some reason
-                if True: # datetime.now().month == 12: (only 10% tax for now)
-                  prices.append(float(col['Value'].replace(',','.'))*1.10*0.1) # tax 10 % and conversion EUR/MW to cent/kW
-                else:
-                  prices.append(float(col['Value'].replace(',','.'))*1.24*0.1) # tax 24 % and conversion EUR/MW to cent/kW
+                prices.append(float(col['Value'].replace(',','.'))*1.24*0.1) # tax 24 % and conversion EUR/MW to cent/kW
   df = pd.DataFrame()
   
   df['electricity price'] = np.single(prices[0:24])
@@ -145,7 +142,7 @@ def load_ts_data():
   
   if 'time' in df.columns:
     df = df.drop_duplicates(subset=['time'])
-    df['electricity price'] = df['electricity price'] + 2.96 + 2.793 # NOTE! Caruna's price is added here
+    #df['electricity price'] = df['electricity price'] + 2.96 + 2.793 # NOTE! Caruna's price is added here
     return df[df['time'] > datetime.now() - timedelta(hours = 8765.81)]
   else:
     df['time'] = [datetime.now()]

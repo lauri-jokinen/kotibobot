@@ -11,11 +11,12 @@ def kaukolampo_c_kWh():
   return 10.74*0.7 # a little factor that accounts for the warm waste water
 
 def is_daytime(end):
-  a = read_schedule(rooms['olkkari']["eq3"][0], end-timedelta(hours=1)) >= 20.0
-  b = read_schedule(rooms['olkkari']["eq3"][0], end) >= 20.0
-  c = read_schedule(rooms['olkkari']["eq3"][0], end+timedelta(hours=1)) >= 20.0
+  #a = read_schedule(rooms['olkkari']["eq3"][0], end-timedelta(hours=1)) >= 21.0
+  #b = read_schedule(rooms['olkkari']["eq3"][0], end) >= 21.0
+  #c = read_schedule(rooms['olkkari']["eq3"][0], end+timedelta(hours=1)) >= 21.0
   #print(((1.0*a)+(1.0*b)+(1.0*c)) / 3.0)
-  return (((1.0*a)+(1.0*b)+(1.0*c)) / 3.0)
+  #return (((1.0*a)+(1.0*b)+(1.0*c)) / 3.0)
+  return False
 
 def price_of_running_appliance(duration, timer_N, timer_delta): # gives actually c/kWh*duration_in_hours , not price
   df = load_ts_data()

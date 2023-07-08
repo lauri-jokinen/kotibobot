@@ -1,4 +1,4 @@
-import kotibobot.hs110, kotibobot.electricity_price, kotibobot.plotting, kotibobot.thermostat_offset_controller
+import kotibobot.hs110, kotibobot.electricity_price, kotibobot.plotting, kotibobot.thermostat_offset_controller, kotibobot.command_queue
 import pandas as pd
 from os.path import exists
 from datetime import date, datetime, timedelta
@@ -31,6 +31,11 @@ freq_limit = 49.999
 
 
 def olkkari_humidifier_automation(data, data_times, target_humidity, freq, freq_limit):
+  Q = kotibobot.command_queue.read()
+  for q in Q:
+    if "olkkari vacation" in q and float(q[-3:]) <= 20:
+      print('olkkari Q vacation')
+      return kotibobot.hs110.ufox_command('off')
   humidity = data['olkkarin lämpömittari humidity']
   temp = data['olkkarin lämpömittari temp']
   target_temp = kotibobot.thermostat_offset_controller.read_schedule(koodit["olkkarin nuppi"])
@@ -100,6 +105,10 @@ def makkari_humidifier_automation(data, data_times, target_humidity, freq, freq_
 
 
 def tyokkari_humidifier_automation(data, data_times, target_humidity, freq, freq_limit):
+  Q = kotibobot.command_queue.read()
+  for q in Q:
+    if "työkkäri vacation" in q and float(q[-3:]) <= 20:
+      return kotibobot.hs110.tyokkari_humidifier_command('off')
   humidity = data['työkkärin lämpömittari humidity']
   temp = data['työkkärin lämpömittari temp']
   target_temp = kotibobot.thermostat_offset_controller.read_schedule(koodit["työkkärin nuppi"])
@@ -132,9 +141,9 @@ def tyokkari_humidifier_automation(data, data_times, target_humidity, freq, freq
 
 
 
-makkari_humidifier_automation (data, data_times, 54, freq, freq_limit)
-olkkari_humidifier_automation (data, data_times, 54, freq, freq_limit)
-tyokkari_humidifier_automation(data, data_times, 54, freq, freq_limit)
+makkari_humidifier_automation (data, data_times, 48, freq, freq_limit)
+olkkari_humidifier_automation (data, data_times, 45, freq, freq_limit)
+tyokkari_humidifier_automation(data, data_times, 45, freq, freq_limit)
 
 print('jii')
 

@@ -124,7 +124,7 @@ def apply_control():
         # if status is nan, we won't do anything, but integral decay
         if math.isnan(status['target']):
           #if math.isnan(data[mac_to_name[eq3] + ' target']):
-          kotibobot.eq3.store_attribute_database(eq3, status['integral']*0.5, 'integral')
+          kotibobot.eq3.store_attribute_database(eq3, status['integral']*0.6, 'integral')
           continue
         
         # if mode is not auto, we won't touch the temperatures
@@ -141,11 +141,11 @@ def apply_control():
         
         # tuning parameters
         par_intercept = 0.245
-        par_integral = 7.49e-05 * 0.9 * 1.5
+        par_integral = 7.49e-05 * 0.9 * 1.5 * 1.8
         par_slope = 990 * 0.9 * 0.9
         
         # evaluate integral and store it
-        integral = status['integral']*0.5 + kotibobot.command_queue.median_timedelta().total_seconds() * (- temp + target_temp)
+        integral = status['integral']*0.6 + kotibobot.command_queue.median_timedelta().total_seconds() * (- temp + target_temp)
         kotibobot.eq3.store_attribute_database(eq3, integral, 'integral')
         
         print('ind_interc:   ' + str((-temp + target_temp) * par_intercept))

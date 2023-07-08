@@ -49,16 +49,20 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes("<p>This is an example web server.</p>", "utf-8"))
         self.wfile.write(bytes("</body></html>", "utf-8"))
         if self.path != '/favicon.ico':
-          com = ''.join(self.path.split('/'))
-          #if com != 'auto':
-          #  kotibobot.hs110.ufox_command('off')
-          command_array = commands[com]
+          com = ''.join(self.path.split('/')) # e.g. "auto"
+          command_array = commands[com] # 'commands' is defined above
+          
+          for c in command_array:
+            co = replace_hours_with_time(c)
+            kotibobot.command_queue.append(co)
+          
+          if com != 'auto':
+            kotibobot.hs110.ufox_command('off')
+            kotibobot.hs110.tyokkari_humidifier_command('off')
+          
           for c in command_array:
             co = replace_hours_with_time(c)
             res = kotibobot.eq3.command_human(co)
-            #print(res)
-            #if "Connection failed" in ''.join(res) or "ERROR" in ''.join(res):
-            kotibobot.command_queue.append(co)
         print("commands done'd")
 
 if __name__ == "__main__":        

@@ -56,7 +56,52 @@ def collect_and_save():
   
   df.to_pickle(file_name)
 
+
+
+def two_latest_datas(col, data):
+  return [data.iloc[-2][col], data.iloc[-1][col]]
+
+def inform_window_actions():
+  df = kotibobot.plotting.load_ts_data()
+  df['olkkarin lämpömittari temp'] = df['olkkarin lämpömittari temp'] + 4.8/100 * df['olkkarin lämpömittari humidity']
+  df['työkkärin lämpömittari temp'] = df['työkkärin lämpömittari temp'] + 4.8/100 * df['työkkärin lämpömittari humidity']
+  df['makkarin lämpömittari temp'] = df['makkarin lämpömittari temp'] + 4.8/100 * df['makkarin lämpömittari humidity']
+  df['outside temp'] = df['outside temp'] + 4.8/100 * df['outside humidity']
+  
+  subdf = df[['outside temp', 'olkkarin lämpömittari temp']].dropna()
+  outside_temps = two_latest_datas('outside temp',subdf)
+  pivot_temps = two_latest_datas('olkkarin lämpömittari temp',subdf)
+  if outside_temps[0] > pivot_temps[0] and  pivot_temps[1] >= outside_temps[1]:
+    kotibobot.requests_robust.telegram_message('Olkkarin ikkuna auki ja liesituuletin päälle')
+  if outside_temps[0] <= pivot_temps[0] and  pivot_temps[1] < outside_temps[1]:
+    kotibobot.requests_robust.telegram_message('Olkkarin ikkuna kiinni ja liesituuletin pois')
+    kotibobot.hs110.ufox_command('off')
+    kotibobot.hs110.ufox_command('off')
+  
+  subdf = df[['outside temp', 'työkkärin lämpömittari temp']].dropna()
+  outside_temps = two_latest_datas('outside temp',subdf)
+  pivot_temps = two_latest_datas('työkkärin lämpömittari temp',subdf)
+  if outside_temps[0] > pivot_temps[0] and  pivot_temps[1] >= outside_temps[1]:
+    kotibobot.requests_robust.telegram_message('Työkkärin ikkuna auki')
+  if outside_temps[0] <= pivot_temps[0] and  pivot_temps[1] < outside_temps[1]:
+    kotibobot.requests_robust.telegram_message('Työkkärin ikkuna kiinni')
+    kotibobot.hs110.tyokkari_humidifier_command('off')
+    kotibobot.hs110.tyokkari_humidifier_command('off')
+  
+  subdf = df[['outside temp', 'makkarin lämpömittari temp']].dropna()
+  outside_temps = two_latest_datas('outside temp',subdf)
+  pivot_temps = two_latest_datas('makkarin lämpömittari temp',subdf)
+  if outside_temps[0] > pivot_temps[0] and  pivot_temps[1] >= outside_temps[1]:
+    kotibobot.requests_robust.telegram_message('Makkarin ikkuna auki')
+  if outside_temps[0] <= pivot_temps[0] and  pivot_temps[1] < outside_temps[1]:
+    kotibobot.requests_robust.telegram_message('Makkarin ikkuna kiinni')
+    kotibobot.hs110.makkari_humidifier_command('off')
+    kotibobot.hs110.makkari_humidifier_command('off')
+  
+
+
 collect_and_save()
+inform_window_actions()
 kotibobot.plotting.main_function()
 
 #kotibobot.hs110.makkari_humidifier_automation() # moved to demand_response.py
@@ -65,7 +110,7 @@ kotibobot.plotting.main_function()
 kotibobot.thermostat_offset_controller.apply_control()
 kotibobot.command_queue.do()
 
-print('jii')
+#print('jii')
 
 #kotibobot.requests_robust.telegram_message('jii!')
 

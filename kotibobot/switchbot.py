@@ -7,7 +7,7 @@ with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
 
 def command_2(mac):
   try:
-    s = ['python', '/home/lowpaw/Downloads/switchbot/switchbot.py', mac, 'Bot', 'Press']
+    s = ['python3', '/home/lowpaw/Downloads/switchbot/switchbot_py2topy3.py', mac, 'Bot', 'Press']
     res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 32)
     res_str = res.stdout.decode('utf-8')
   except:
@@ -16,7 +16,7 @@ def command_2(mac):
   #return_dict['res'] = res_str
 
 def press():
-  return "Ei käytössä talvella. Nähdään taas kesällä!"
+  #return "Ei käytössä talvella. Nähdään taas kesällä!"
   mac = koodit['switchbot']
   res = command_2(mac)
   if "ERROR" in res or 'unsuccessful' in res:

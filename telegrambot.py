@@ -201,17 +201,18 @@ def workday_cool(update, context):
     update.message.reply_text('Kello on jo yli {}, joten en tee mitään.'.format(str(hour)))
     return
   string = time.strftime("%y-%m-%d %H:%M")
+  co = 'olkkari vacation {} 15'.format(string)
+  kotibobot.command_queue.append(co)
+  co = 'työkkäri vacation {} 15'.format(string)
+  kotibobot.command_queue.append(co)
+  
   update.message.reply_text('Tehty! Koti on viileä klo {} asti.'.format(str(hour)))
   
   co = 'olkkari vacation {} 15'.format(string)
-  res = kotibobot.eq3.command_human(co)
-  if "Connection failed" in ''.join(res) or "ERROR" in ''.join(res):
-    kotibobot.command_queue.append(co)
-  
+  kotibobot.eq3.command_human(co)
   co = 'työkkäri vacation {} 15'.format(string)
-  res = kotibobot.eq3.command_human(co)
-  if "Connection failed" in ''.join(res) or "ERROR" in ''.join(res):
-    kotibobot.command_queue.append(co)
+  kotibobot.eq3.command_human(co)
+  
   
 
 def wake_on_lan(update, context):

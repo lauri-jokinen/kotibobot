@@ -74,7 +74,7 @@ def temp_hum_inside_outside_forecast(data_orig, a, make_plot = True):
   if not make_plot:
     return html_link(plotname, filename)
   
-  data = data_orig
+  data = data_orig.copy()
   
   x1 = datetime.now() - timedelta(hours=3*24)
   x2 = datetime.now() + timedelta(hours=2*24)
@@ -153,10 +153,10 @@ def temp_48_all_rooms(data_orig, a, make_plot = True):
   plotname = "Temperature, 48h all rooms"
   if not make_plot:
     return html_link(plotname, filename)
-  data = data_orig
+  data = data_orig.copy()
   
-  x2 = datetime.now()
-  x1 = x2 - timedelta(hours=48)
+  x2 = datetime.now() + timedelta(hours=5)
+  x1 = datetime.now() - timedelta(hours=48)
   x_range = [x1,x2]
   
   # min and max temps are used to filter
@@ -179,14 +179,93 @@ def temp_48_all_rooms(data_orig, a, make_plot = True):
   data['outside temp'] = data['outside temp'].where(data['outside temp'] < max_room_temp, float('nan'))
   data['outside temp'] = data['outside temp'].where(data['outside temp'] > min_room_temp, float('nan'))
   '''
-  data['outside temp'] = data['outside temp'].where(data['outside temp'] < 24.0, float('nan'))
-  data['outside temp'] = data['outside temp'].where(data['outside temp'] > 18.0, float('nan'))
+  data['outside temp'] = data['outside temp'].where(data['outside temp'] < 27.0, float('nan'))
+  data['outside temp'] = data['outside temp'].where(data['outside temp'] > 20.0, float('nan'))
+  
+  forecast = kotibobot.weather.forecast()
+  t_start_forecast = datetime.now() - timedelta(minutes = 1) # takes current time into account
+  t_end_forecast = datetime.now() + timedelta(hours = 6)
+  forecast = forecast[forecast['time'] > t_start_forecast]
+  forecast = forecast[forecast['time'] < t_end_forecast]
+  forecast['temp'] = forecast['temp'].where(forecast['temp'] < 27.0, float('nan'))
+  forecast['temp'] = forecast['temp'].where(forecast['temp'] > 20.0, float('nan'))
+  
   fig, ax = plt.subplots(1,1,figsize=figure_size())
   (x,y) = get_plot_range(data, temps, x_range)
   ax.plot(x, y, alpha=0.7, label = temps)
   (x,y) = get_plot_range(data, "outside temp", x_range)
-  ax.plot(x, y, alpha=0.7, linestyle='dashed', label = "outside temp.")
+  ax.plot(x, y, alpha=0.7, color='r', linestyle='dashed', label = "outside temp.")
+  (x,y) = get_plot_range(forecast, 'temp', x_range)
+  ax.plot(x, y, alpha=0.7, color='r', linestyle = ':', label='forecast temp')
+  
   plt.ylabel('    °C',rotation=0)
+  
+  lim = list(plt.ylim())
+  lim[0] = math.floor(lim[0])
+  lim[1] = math.ceil(lim[1])
+  
+  ax.set_yticks(list(range(lim[0],lim[1]+1)), minor=False)
+  
+  ax.yaxis.grid(True, which='major', alpha = 0.2)
+  ax.yaxis.grid(True, which='minor')
+  ax.xaxis.grid(True, alpha=0.2)
+  ax.set_xlabel('')
+  
+  myFmt = mdates.DateFormatter('%-H:%M\n%-d.%-m.')
+  plt.xticks(rotation=0, ha='center')
+  ax.xaxis.set_major_formatter(myFmt)
+  ax.yaxis.tick_right()
+  ax.yaxis.set_label_position("right")
+  ax.legend()
+  
+  a.save(fig,'/var/www/html/kotibobot/' + filename)
+  return html_link(plotname, filename)
+  
+def temp_48_all_rooms_real_feel(data_orig, a, make_plot = True):
+  plt.ioff()
+  filename = 'temp_allrooms_rf.svg'
+  plotname = "Temperature real feel, 48h all rooms"
+  if not make_plot:
+    return html_link(plotname, filename)
+  data = data_orig.copy()
+  
+  x2 = datetime.now() + timedelta(hours=5)
+  x1 = datetime.now() - timedelta(hours=48)
+  x_range = [x1,x2]
+  
+  # min and max temps are used to filter
+  # too low and too high outside temp -values
+  #max_room_temp = -float('inf')
+  #min_room_temp =  float('inf')
+  
+  temps = []
+  for room in rooms:
+    for sensor in mi_in_rooms[room]:
+      temps.append(sensor + " temp")
+      data[sensor + " temp"] = data[sensor + " temp"] + 4.8/100*data[sensor + " humidity"] - 4.8/2
+  
+  data['outside temp'] = data['outside temp'] + 4.8/100*data['outside humidity'] - 4.8/2
+  data['outside temp'] = data['outside temp'].where(data['outside temp'] < 27.0, float('nan'))
+  data['outside temp'] = data['outside temp'].where(data['outside temp'] > 20.0, float('nan'))
+  
+  forecast = kotibobot.weather.forecast()
+  t_start_forecast = datetime.now() - timedelta(minutes = 1) # takes current time into account
+  t_end_forecast = datetime.now() + timedelta(hours = 6)
+  forecast = forecast[forecast['time'] > t_start_forecast]
+  forecast = forecast[forecast['time'] < t_end_forecast]
+  forecast['temp'] = forecast['temp'] + 4.8/100*forecast['humidity'] - 4.8/2
+  forecast['temp'] = forecast['temp'].where(forecast['temp'] < 27.0, float('nan'))
+  forecast['temp'] = forecast['temp'].where(forecast['temp'] > 20.0, float('nan'))
+  
+  fig, ax = plt.subplots(1,1,figsize=figure_size())
+  (x,y) = get_plot_range(data, temps, x_range)
+  ax.plot(x, y, alpha=0.7, label = temps)
+  (x,y) = get_plot_range(data, "outside temp", x_range)
+  ax.plot(x, y, alpha=0.7, color='r', linestyle='dashed', label = "outside temp.")
+  (x,y) = get_plot_range(forecast, 'temp', x_range)
+  ax.plot(x, y, alpha=0.7, color='r', linestyle = ':', label='forecast temp')
+  
+  plt.ylabel('    RF °C',rotation=0)
   
   lim = list(plt.ylim())
   lim[0] = math.floor(lim[0])
@@ -215,7 +294,7 @@ def humidity_48_all_rooms(data_orig, a, make_plot = True):
   plotname = "Humidity, 48h all rooms"
   if not make_plot:
     return html_link(plotname, filename)
-  data = data_orig
+  data = data_orig.copy()
   
   x2 = datetime.now()
   x1 = x2 - timedelta(hours=48)
@@ -254,7 +333,7 @@ def temp_48(room, data_orig, a, make_plot = True):
   plotname = "Temperature, 48h"
   if not make_plot:
     return html_link(plotname, filename)
-  data = data_orig
+  data = data_orig.copy()
   
   valves = []
   for eq3 in eq3_in_rooms[room]:
@@ -321,7 +400,7 @@ def temp_days(room, data_orig, a, make_plot = True):
   plotname = "Temperature, past three days"
   if not make_plot:
     return html_link(plotname, filename)
-  data = data_orig
+  data = data_orig.copy()
   
   temps = []
   for sensor in mi_in_rooms[room]:
@@ -369,7 +448,7 @@ def humidity_days(room, data_orig, a, make_plot = True):
   plotname = "Humidity, past three days"
   if not make_plot:
     return html_link(plotname, filename)
-  data = data_orig
+  data = data_orig.copy()
   
   humidities = []
   for sensor in mi_in_rooms[room]:
@@ -413,8 +492,8 @@ def electricity_price_days(data_orig, a, make_plot = True):
   plotname = "Electricity price"
   if not make_plot:
     return html_link(plotname, filename)
-  data = data_orig
-  time = data_orig['time']
+  data = data_orig.copy()
+  time = data['time']
   x1 = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
   x2 = x1 + timedelta(hours=24)
   time_range = [x1,x2]
@@ -476,6 +555,7 @@ def main_function(draw_plots = True):
   a = AsyncPlotter()
   res = ["Kaikki huoneet"] # in html
   res.append(temp_hum_inside_outside_forecast(data_orig,a,draw_plots))
+  res.append(temp_48_all_rooms_real_feel(data_orig,a,draw_plots))
   res.append(temp_48_all_rooms(data_orig,a,draw_plots))
   res.append(humidity_48_all_rooms(data_orig,a,draw_plots))
   res.append(electricity_price_days(data_orig_el,a,draw_plots))

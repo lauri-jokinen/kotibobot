@@ -5,7 +5,7 @@ with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
   koodit = json.load(json_file)
 
 # more positive value implies a lower initial temp in the room
-hard_offset = {'olkkari' : 2.0, 'makkari' : 2.0, 'työkkäri' : -3.0}
+hard_offset = {'olkkari' : 2.0, 'makkari' : 0.5, 'työkkäri' : -3.0}
 
 rooms = json.loads("{}")
 
