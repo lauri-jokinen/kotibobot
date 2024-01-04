@@ -101,7 +101,7 @@ def inform_window_actions():
 
 
 collect_and_save()
-inform_window_actions()
+#inform_window_actions()
 kotibobot.plotting.main_function()
 
 #kotibobot.hs110.makkari_humidifier_automation() # moved to demand_response.py

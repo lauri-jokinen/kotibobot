@@ -106,7 +106,7 @@ def get_forwards3(time_delta):
       for col in row['Columns']:
           if col['Name'] == 'FI' and len(prices) < 24:
               if col['Value']!='-': # accounts for daylight savings time; actually NP api does not work at days around DST for some reason
-                prices.append(float(col['Value'].replace(',','.'))*1.24*0.1) # tax 24 % and conversion EUR/MW to cent/kW
+                prices.append(float(col['Value'].replace(',','.').replace(' ',''))*1.24*0.1) # tax 24 % and conversion EUR/MW to cent/kW
   df = pd.DataFrame()
   
   df['electricity price'] = np.single(prices[0:24])

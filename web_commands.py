@@ -12,8 +12,8 @@ with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
     koodit = json.load(json_file)
 
 commands = {
-'cool-1h':['olkkari vacation {1} 15', 'työkkäri vacation {1} 15'],
-'cool-2h':['olkkari vacation {2} 15', 'työkkäri vacation {2} 15'],
+'cool-1h':['olkkari vacation {1} 18', 'työkkäri vacation {1} 19'],
+'cool-2h':['olkkari vacation {2} 18', 'työkkäri vacation {2} 19'],
 'auto':['olkkari auto', 'työkkäri auto', 'makkari auto']
 }
 
@@ -58,7 +58,7 @@ class MyServer(BaseHTTPRequestHandler):
           
           if com != 'auto':
             kotibobot.hs110.ufox_command('off')
-            kotibobot.hs110.tyokkari_humidifier_command('off')
+            #kotibobot.hs110.tyokkari_humidifier_command('off')
           
           for c in command_array:
             co = replace_hours_with_time(c)

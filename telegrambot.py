@@ -2,6 +2,8 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import json
 from datetime import datetime
 from wakeonlan import send_magic_packet
+import subprocess
+import time
 
 import kotibobot
 import common_functions
@@ -201,9 +203,9 @@ def workday_cool(update, context):
     update.message.reply_text('Kello on jo yli {}, joten en tee mitään.'.format(str(hour)))
     return
   string = time.strftime("%y-%m-%d %H:%M")
-  co = 'olkkari vacation {} 15'.format(string)
+  co = 'olkkari vacation {} 18'.format(string)
   kotibobot.command_queue.append(co)
-  co = 'työkkäri vacation {} 15'.format(string)
+  co = 'työkkäri vacation {} 19'.format(string)
   kotibobot.command_queue.append(co)
   
   update.message.reply_text('Tehty! Koti on viileä klo {} asti.'.format(str(hour)))
@@ -234,6 +236,39 @@ def ip(update, context): # shows public ip address
     return
   update.message.reply_text(kotibobot.requests_robust.get_public_ip())
 
+def unmount_data(update, context):
+  s = ['umount', '/dev/sdb1']
+  res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 5)
+  res_str = res.stdout.decode('utf-8')
+  update.message.reply_text('Tulos:' + res_str)
+  time.sleep(1)
+  kotibobot.hs110.tyokkari_humidifier_command('off')
+  kotibobot.hs110.tyokkari_humidifier_command('off')
+
+def mount_data(update, context):
+  kotibobot.hs110.tyokkari_humidifier_command('on')
+  kotibobot.hs110.tyokkari_humidifier_command('on')
+  time.sleep(20)
+  s = ['mount', '/dev/sdb1']
+  res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 5)
+  res_str = res.stdout.decode('utf-8')
+  update.message.reply_text('Tulos:' + res_str)
+'''
+  if "Connection failed" in res_str or "ERROR" in res_str:
+    #print('Yhteys pätki kerran')
+    time.sleep(5)
+    s = ['/home/lowpaw/Downloads/eq3/eq3.exp', 'hci0'] + string.split(' ')
+    res = subprocess.run(s, stdout=subprocess.PIPE)
+    res_str = res.stdout.decode('utf-8')
+    if "Connection failed" in res_str or "ERROR" in res_str:
+      #print('Yhteys pätki toisen kerran')
+      time.sleep(5)
+      s = ['/home/lowpaw/Downloads/eq3/eq3.exp', 'hci1'] + string.split(' ')
+      res = subprocess.run(s, stdout=subprocess.PIPE)
+      res_str = res.stdout.decode('utf-8')
+  return res_str
+'''
+
 def main():
   # Create Updater object and attach dispatcher to it
   updater = Updater(koodit["kotibobot"])
@@ -257,10 +292,12 @@ def main():
   vahti_append_handler = CommandHandler('addtovahti', vahti_append)
   vahti_print_handler = CommandHandler('printvahti', vahti_print)
   vahti_wipe_handler = CommandHandler('wipevahti', vahti_wipe)
-  switchbot_handler = CommandHandler('cool', switchbot_push)
+  #switchbot_handler = CommandHandler('cool', switchbot_push)
   ip_handler = CommandHandler('ip', ip)
   workday_handler = CommandHandler('workday', workday_cool)
   refresh_timers_handler = CommandHandler('refreshtimers', refresh_timers)
+  mount_data_handler = CommandHandler('mount', mount_data)
+  unmount_data_handler = CommandHandler('unmount', unmount_data)
   
   dispatcher.add_handler(start_handler)
   dispatcher.add_handler(eq3_handler)
@@ -278,10 +315,12 @@ def main():
   dispatcher.add_handler(vahti_append_handler)
   dispatcher.add_handler(vahti_print_handler)
   dispatcher.add_handler(vahti_wipe_handler)
-  dispatcher.add_handler(switchbot_handler)
+  #dispatcher.add_handler(switchbot_handler)
   dispatcher.add_handler(ip_handler)
   dispatcher.add_handler(workday_handler)
   dispatcher.add_handler(refresh_timers_handler)
+  dispatcher.add_handler(mount_data_handler)
+  dispatcher.add_handler(unmount_data_handler)
 
   # Start the bot
   updater.start_polling()
