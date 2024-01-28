@@ -142,7 +142,7 @@ def tyokkari_humidifier_automation(data, data_times, target_humidity, freq, freq
 
 
 makkari_humidifier_automation (data, data_times, 48, freq, freq_limit)
-olkkari_humidifier_automation (data, data_times, 46, freq, freq_limit)
+olkkari_humidifier_automation (data, data_times, 42, freq, freq_limit)
 #tyokkari_humidifier_automation(data, data_times, 45, freq, freq_limit)
 
 print('jii')

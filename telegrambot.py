@@ -205,14 +205,14 @@ def workday_cool(update, context):
   string = time.strftime("%y-%m-%d %H:%M")
   co = 'olkkari vacation {} 18'.format(string)
   kotibobot.command_queue.append(co)
-  co = 'työkkäri vacation {} 19'.format(string)
+  co = 'työkkäri vacation {} 20'.format(string)
   kotibobot.command_queue.append(co)
   
   update.message.reply_text('Tehty! Koti on viileä klo {} asti.'.format(str(hour)))
   
-  co = 'olkkari vacation {} 15'.format(string)
+  co = 'olkkari vacation {} 18'.format(string)
   kotibobot.eq3.command_human(co)
-  co = 'työkkäri vacation {} 15'.format(string)
+  co = 'työkkäri vacation {} 20'.format(string)
   kotibobot.eq3.command_human(co)
   
   

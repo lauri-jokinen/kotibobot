@@ -47,7 +47,7 @@ def ufox_is_on():
   except:
     res = True
   return res
-    
+
 
 def ufox_power():
   try:
@@ -56,6 +56,12 @@ def ufox_power():
   except:
     return float('nan')
 
+def FTP_is_on():
+  try:
+    res = int(plug_command('info', 'työkkärin_kostutin').split('relay_state":')[1].split(',')[0]) == 1
+  except:
+    res = False
+  return res
 
 '''
 # HUMIDIFIER CODE

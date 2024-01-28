@@ -6,6 +6,8 @@ import numpy as np
 import kotibobot
 from house import *
 from common_functions import *
+import xml.etree.ElementTree as ET
+
 
 def collect_and_save():
   new_data = json.loads("{}")
@@ -112,5 +114,26 @@ kotibobot.command_queue.do()
 
 #print('jii')
 
+if kotibobot.hs110.FTP_is_on():
+  kotibobot.requests_robust.telegram_message('FTP on päällä')
+
 #kotibobot.requests_robust.telegram_message('jii!')
 
+# Dynamic DNS ping
+with open("/home/lowpaw/Downloads/telegram-koodeja.json") as json_file:
+  koodit = json.load(json_file)
+
+dmn = koodit['dynamicDNSdomain']
+pwd = koodit['dynamicDNSpassword']
+r = kotibobot.requests_robust.get_url('https://dynamicdns.park-your-domain.com/update?host=@&domain=' + dmn + '&password=' + pwd).content
+root = ET.fromstring(r.decode('utf-8'))
+res = json.loads('{}')
+for child in root:
+  #print(child.tag, child.text)
+  res[child.tag] = child.text
+
+if (res['ErrCount'] != '0'):
+  print('Dynamic IP ping failed')
+  kotibobot.requests_robust.telegram_message('Dynamic IP ping failed')
+else:
+  print('Dynamic DNS was pinged successfully')
