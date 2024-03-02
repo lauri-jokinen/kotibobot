@@ -217,14 +217,15 @@ def workday_cool(update, context):
   
   
 
-def wake_on_lan(update, context):
+'''def wake_on_lan(update, context):
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
   send_magic_packet(koodit['pöytäkone-mac'])
-  update.message.reply_text('Tehty!')
+  update.message.reply_text('Tehty!')'''
   
 def switchbot_push(update, context):
+  return
   if not authorized(update, context):
     update.message.reply_text("You are not authorized.")
     return
@@ -237,7 +238,7 @@ def ip(update, context): # shows public ip address
   update.message.reply_text(kotibobot.requests_robust.get_public_ip())
 
 def unmount_data(update, context):
-  s = ['umount', '/dev/sdb1']
+  s = ['umount', '/dev/disk/by-id/wwn-0x5000c5009cce0f60-part1']
   res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 5)
   res_str = res.stdout.decode('utf-8')
   update.message.reply_text('Tulos:' + res_str)
@@ -249,7 +250,7 @@ def mount_data(update, context):
   kotibobot.hs110.tyokkari_humidifier_command('on')
   kotibobot.hs110.tyokkari_humidifier_command('on')
   time.sleep(20)
-  s = ['mount', '/dev/sdb1']
+  s = ['mount', '/dev/disk/by-id/wwn-0x5000c5009cce0f60-part1']
   res = subprocess.run(s, stdout=subprocess.PIPE, timeout = 5)
   res_str = res.stdout.decode('utf-8')
   update.message.reply_text('Tulos:' + res_str)
@@ -287,7 +288,7 @@ def main():
   command_queue_append_handler = CommandHandler('addtoqueue', command_queue_append)
   command_queue_print_handler = CommandHandler('printqueue', command_queue_print)
   command_queue_wipe_handler = CommandHandler('wipequeue', command_queue_wipe)
-  wake_on_lan_handler = CommandHandler('wakecomputer', wake_on_lan)
+  #wake_on_lan_handler = CommandHandler('wakecomputer', wake_on_lan)
   timer_handler = CommandHandler('timer', timer_new)
   vahti_append_handler = CommandHandler('addtovahti', vahti_append)
   vahti_print_handler = CommandHandler('printvahti', vahti_print)
@@ -310,7 +311,7 @@ def main():
   dispatcher.add_handler(command_queue_append_handler)
   dispatcher.add_handler(command_queue_print_handler)
   dispatcher.add_handler(command_queue_wipe_handler)
-  dispatcher.add_handler(wake_on_lan_handler)
+  #dispatcher.add_handler(wake_on_lan_handler)
   dispatcher.add_handler(timer_handler)
   dispatcher.add_handler(vahti_append_handler)
   dispatcher.add_handler(vahti_print_handler)

@@ -17,11 +17,11 @@ rooms["olkkari"]["mi"] = [koodit["olkkarin lämpömittari"]]
 
 rooms["makkari"] = json.loads("{}")
 rooms["makkari"]["eq3"] = [koodit["makkarin nuppi"]]
-rooms["makkari"]["mi"] = [koodit["makkarin lämpömittari"]]
+rooms["makkari"]["mi"] = [koodit["työkkärin lämpömittari"]] # WRONG!
 
 rooms["työkkäri"] = json.loads("{}")
 rooms["työkkäri"]["eq3"] = [koodit["työkkärin nuppi"]]
-rooms["työkkäri"]["mi"] = [koodit["työkkärin lämpömittari"]]
+rooms["työkkäri"]["mi"] = [koodit["makkarin lämpömittari"]] # WRONG!
 
 # FILL IN THE MAC ADDRESSES AND NAMES OF ALL DEVICES
 # {"mac1": "device name", ...}
@@ -30,8 +30,8 @@ mac_to_name[koodit["olkkarin nuppi"]] = "olkkarin nuppi"
 mac_to_name[koodit["keittiön nuppi"]] = "keittiön nuppi"
 mac_to_name[koodit["makkarin nuppi"]] = "makkarin nuppi"
 mac_to_name[koodit["työkkärin nuppi"]] = "työkkärin nuppi"
-mac_to_name[koodit["työkkärin lämpömittari"]] = "työkkärin lämpömittari"
-mac_to_name[koodit["makkarin lämpömittari"]] = "makkarin lämpömittari"
+mac_to_name[koodit["makkarin lämpömittari"]] = "työkkärin lämpömittari"
+mac_to_name[koodit["työkkärin lämpömittari"]] = "makkarin lämpömittari"
 mac_to_name[koodit["olkkarin lämpömittari"]] = "olkkarin lämpömittari"
 
 # Next we construct all sorts of structs and arrays ...

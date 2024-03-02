@@ -71,7 +71,8 @@ def olkkari_humidifier_automation(data, data_times, target_humidity, freq, freq_
 def makkari_humidifier_automation(data, data_times, target_humidity, freq, freq_limit):
   humidity = data['makkarin lämpömittari humidity']
   temp = data['makkarin lämpömittari temp']
-  target_temp = kotibobot.thermostat_offset_controller.read_schedule(koodit["makkarin nuppi"])
+  target_temp = 21.5
+  #target_temp = kotibobot.thermostat_offset_controller.read_schedule(koodit["makkarin nuppi"])
   # relative humidity at target temperature
   #if temp > target_temp:
   humidity = kotibobot.plotting.outside_hum_to_inside_hum(target_temp, temp, humidity)
@@ -81,20 +82,20 @@ def makkari_humidifier_automation(data, data_times, target_humidity, freq, freq_
     #print('Humidity is high in makkari')
     return kotibobot.hs110.makkari_humidifier_command('off')
     
-  if target_temp > 21.0 and humidity > target_humidity - 2: # morning heat
-    return kotibobot.hs110.makkari_humidifier_command('off')
+  #if target_temp > 21.0 and humidity > target_humidity - 2: # morning heat
+  #  return kotibobot.hs110.makkari_humidifier_command('off')
   
-  if not (datetime.now().hour >= 22 or datetime.now().hour < 8):
-    #print("It's day time")
-    return kotibobot.hs110.makkari_humidifier_command('off')
+  #if not (datetime.now().hour >= 22 or datetime.now().hour < 8):
+  #  #print("It's day time")
+  #  return kotibobot.hs110.makkari_humidifier_command('off')
   
-  if (data['makkarin nuppi vacationmode'] == 1) and (data['makkarin nuppi target'] <= 20.0):
-    print("It's cold time")
-    return kotibobot.hs110.makkari_humidifier_command('off')
+  #if (data['makkarin nuppi vacationmode'] == 1) and (data['makkarin nuppi target'] <= 20.0):
+  #  print("It's cold time")
+  #  return kotibobot.hs110.makkari_humidifier_command('off')
   
-  if target_temp <= 19.0:
-    #print("It's scheduled cold time")
-    return kotibobot.hs110.makkari_humidifier_command('off')
+  #if target_temp <= 19.0:
+  #  #print("It's scheduled cold time")
+  #  return kotibobot.hs110.makkari_humidifier_command('off')
     
   if freq <= freq_limit and humidity > target_humidity-2:
     return kotibobot.hs110.makkari_humidifier_command('off')
@@ -141,8 +142,8 @@ def tyokkari_humidifier_automation(data, data_times, target_humidity, freq, freq
 
 
 
-makkari_humidifier_automation (data, data_times, 48, freq, freq_limit)
-olkkari_humidifier_automation (data, data_times, 42, freq, freq_limit)
+makkari_humidifier_automation (data, data_times, 43, freq, freq_limit)
+#olkkari_humidifier_automation (data, data_times, 42, freq, freq_limit)
 #tyokkari_humidifier_automation(data, data_times, 45, freq, freq_limit)
 
 print('jii')
